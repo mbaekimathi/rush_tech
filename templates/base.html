@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>{% block title %}{{ company_name }} - Assets Management{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Sidebar fixed positioning */
+        .sidebar {
+            position: fixed;
+            top: 80px; /* Header height */
+            left: 0;
+            z-index: 40;
+        }
+        
+        /* Mobile sidebar slide animation */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+        
+        /* Desktop: Add margin to main content to account for fixed sidebar */
+        @media (min-width: 769px) {
+            .main-content {
+                margin-left: 256px; /* w-64 = 256px */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-2 md:px-4 py-2 md:py-3">
+            <div class="flex items-center justify-between">
+                <!-- Company Name and Logo (Combined and Compact) -->
+                <div class="flex items-center space-x-1.5 md:space-x-2">
+                    {% if company_logo %}
+                    <img src="{{ url_for('uploaded_file', filename=company_logo) }}" 
+                         alt="Company Logo" 
+                         class="h-5 w-auto md:h-7 object-contain"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <i class="fas fa-building text-base md:text-xl hidden"></i>
+                    {% else %}
+                    <i class="fas fa-building text-base md:text-xl"></i>
+                    {% endif %}
+                    <h1 class="text-sm md:text-xl font-bold whitespace-nowrap">{{ company_name }}</h1>
+                </div>
+                
+                <!-- Right side: Notifications, Date/Time, Login -->
+                <div class="flex items-center space-x-2 md:space-x-4 lg:space-x-6">
+                    <!-- Notifications Icon -->
+                    <a href="{{ url_for('notifications') }}" 
+                       class="flex items-center space-x-1 md:space-x-2 bg-white/10 hover:bg-white/20 px-2 py-1.5 md:px-3 md:py-2 rounded-lg transition duration-200 relative">
+                        <i class="fas fa-bell text-base md:text-xl"></i>
+                        <span class="hidden sm:inline text-sm font-medium">Notifications</span>
+                        {% if notification_count and notification_count > 0 %}
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] md:text-xs rounded-full min-w-[18px] h-[18px] md:min-w-[20px] md:h-[20px] px-1 flex items-center justify-center font-bold leading-none">
+                            {% if notification_count > 99 %}99+{% else %}{{ notification_count }}{% endif %}
+                        </span>
+                        {% endif %}
+                    </a>
+                    
+                    <!-- Live Date and Time -->
+                    <div class="hidden md:flex flex-col items-end">
+                        <div id="current-date" class="text-sm font-medium"></div>
+                        <div id="current-time" class="text-xs opacity-90"></div>
+                    </div>
+                    
+                    <!-- Mobile Date/Time -->
+                    <div class="md:hidden text-xs">
+                        <div id="current-time-mobile"></div>
+                    </div>
+                    
+                    <!-- Employee Login Link (only show when not logged in) -->
+                    {% if not session.user_id %}
+                    <a href="{{ url_for('login') }}" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition duration-200 flex items-center space-x-2">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span class="hidden sm:inline">Employee Login</span>
+                        <span class="sm:hidden">Login</span>
+                    </a>
+                    {% else %}
+                    <!-- Profile Dropdown -->
+                    <div class="relative" id="profile-dropdown-container">
+                        <button id="profile-dropdown-btn" class="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg transition duration-200">
+                            <!-- Profile Picture -->
+                            <div class="w-8 h-8 rounded-full overflow-hidden bg-white flex items-center justify-center">
+                                {% if session.profile_picture %}
+                                <img src="{{ url_for('static', filename=session.profile_picture) }}" alt="Profile" class="w-full h-full object-cover">
+                                {% else %}
+                                <i class="fas fa-user text-blue-600 text-sm"></i>
+                                {% endif %}
+                            </div>
+                            <!-- Name (hidden on mobile) -->
+                            <span class="hidden md:inline text-sm font-medium">{{ session.full_name }}</span>
+                            <!-- Role Switch Indicator (for IT Support) -->
+                            {% if actual_role == 'IT Support' and switched_role %}
+                            <span class="hidden md:inline text-xs bg-yellow-500 text-white px-2 py-0.5 rounded-full font-semibold">
+                                {{ switched_role }}
+                            </span>
+                            {% endif %}
+                            <!-- Dropdown Arrow -->
+                            <i id="profile-dropdown-arrow" class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div id="profile-dropdown-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-200 hidden">
+                            <a href="{{ url_for('my_profile') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                                <i class="fas fa-user w-5"></i>
+                                <span>Profile</span>
+                            </a>
+                            {% if actual_role == 'IT Support' or actual_role == 'Admin' or (actual_role == 'IT Support' and switched_role == 'Admin') %}
+                            <a href="{{ url_for('settings') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                                <i class="fas fa-cog w-5"></i>
+                                <span>Settings</span>
+                            </a>
+                            {% endif %}
+                            <hr class="my-2 border-gray-200">
+                            <a href="{{ url_for('logout') }}" class="flex items-center space-x-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 transition duration-200">
+                                <i class="fas fa-sign-out-alt w-5"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Mobile Menu Toggle (only when logged in) -->
+                    {% if session.user_id %}
+                    <button id="mobile-menu-toggle" class="md:hidden text-white p-2">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex min-h-[calc(100vh-200px)]">
+        <!-- Sidebar (only shown when user is in session) -->
+        {% if session.user_id %}
+        <aside id="sidebar" class="sidebar bg-white shadow-lg w-64 h-[calc(100vh-80px)] overflow-y-auto border-r border-gray-200 flex flex-col">
+            <nav class="p-4 flex flex-col flex-1">
+                <!-- Shared Dashboard Link (Top) -->
+                <ul class="space-y-2 mb-4">
+                    <li>
+                        <a href="{{ url_for('dashboard') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'dashboard' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+                            <i class="fas fa-home w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Page-Specific Sidebar Content (Middle) -->
+                <div class="flex-1">
+                    {% block sidebar_content %}
+                    <!-- Each page defines its own unique sidebar links here -->
+                    {% endblock %}
+                </div>
+                
+                <!-- Shared Settings and Logout Links (Bottom) -->
+                <ul class="space-y-2 mt-auto pt-4 border-t border-gray-200">
+                    {% if actual_role == 'IT Support' or actual_role == 'Admin' or (actual_role == 'IT Support' and switched_role == 'Admin') %}
+                    <li>
+                        <a href="{{ url_for('settings') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-gray-900 transition duration-200 {% if current_endpoint == 'settings' %}bg-gray-50 text-gray-900 font-semibold{% endif %}">
+                            <i class="fas fa-cog w-5"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a href="{{ url_for('logout') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-50 text-red-600 hover:text-red-700 transition duration-200">
+                            <i class="fas fa-sign-out-alt w-5"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        {% endif %}
+
+        <!-- Main Content -->
+        <main class="flex-1 {% if session.user_id %}main-content{% endif %}">
+            <div class="container mx-auto px-4 py-6">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="mb-4 space-y-2">
+                            {% for category, message in messages %}
+                                <div class="p-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700 border border-red-300{% elif category == 'success' %}bg-green-100 text-green-700 border border-green-300{% else %}bg-blue-100 text-blue-700 border border-blue-300{% endif %}">
+                                    <div class="flex items-center justify-between">
+                                        <span>{{ message }}</span>
+                                        <button onclick="this.parentElement.parentElement.remove()" class="text-lg font-bold">&times;</button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-auto">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-sm">&copy; 2026 {{ company_name }}. All rights reserved.</p>
+                </div>
+                <div class="flex space-x-6 text-sm">
+                    <a href="#" class="hover:text-blue-400 transition">Privacy Policy</a>
+                    <a href="#" class="hover:text-blue-400 transition">Terms of Service</a>
+                    <a href="#" class="hover:text-blue-400 transition">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for live date/time and mobile menu -->
+    <script>
+        // Update date and time (frontend only, no server calls)
+        function updateDateTime() {
+            const now = new Date();
+            
+            // Format date: "January 25, 2026"
+            const date = now.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            // Format time: "11:30:45 AM"
+            const time = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: true
+            });
+            
+            // Update desktop date and time
+            const dateElement = document.getElementById('current-date');
+            const timeElement = document.getElementById('current-time');
+            const timeMobileElement = document.getElementById('current-time-mobile');
+            
+            if (dateElement) dateElement.textContent = date;
+            if (timeElement) timeElement.textContent = time;
+            if (timeMobileElement) timeMobileElement.textContent = time;
+        }
+
+        // Update immediately and then every second
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        
+        if (mobileMenuToggle && sidebar) {
+            mobileMenuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    if (!sidebar.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
+                        sidebar.classList.remove('open');
+                    }
+                }
+            });
+        }
+
+        // Profile dropdown toggle
+        const profileDropdownBtn = document.getElementById('profile-dropdown-btn');
+        const profileDropdownMenu = document.getElementById('profile-dropdown-menu');
+        const profileDropdownArrow = document.getElementById('profile-dropdown-arrow');
+        const profileDropdownContainer = document.getElementById('profile-dropdown-container');
+        
+        if (profileDropdownBtn && profileDropdownMenu) {
+            profileDropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isHidden = profileDropdownMenu.classList.contains('hidden');
+                
+                if (isHidden) {
+                    profileDropdownMenu.classList.remove('hidden');
+                    profileDropdownArrow.style.transform = 'rotate(180deg)';
+                } else {
+                    profileDropdownMenu.classList.add('hidden');
+                    profileDropdownArrow.style.transform = 'rotate(0deg)';
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (profileDropdownContainer && !profileDropdownContainer.contains(e.target)) {
+                    profileDropdownMenu.classList.add('hidden');
+                    profileDropdownArrow.style.transform = 'rotate(0deg)';
+                }
+            });
+        }
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

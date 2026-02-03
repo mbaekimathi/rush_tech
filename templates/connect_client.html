@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+
+{% block title %}Connect Client - RUSHTACH{% endblock %}
+
+{% block sidebar_content %}
+<!-- Connect Client Page Sidebar - Customize based on role -->
+<ul class="space-y-2">
+    <!-- Add your connect client-specific sidebar links here (role-based) -->
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8 mb-8">
+    <div class="bg-white rounded-xl shadow-2xl p-8">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
+                <i class="fas fa-plug text-green-600 text-3xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Connect Client</h2>
+            <p class="text-gray-600">Connect client to the network</p>
+        </div>
+
+        <!-- Client Information Card -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-blue-800 mb-4">
+                <i class="fas fa-info-circle mr-2"></i>Client Information
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-gray-600">Account Number</p>
+                    <p class="text-base font-semibold text-gray-900">{{ client.account_number }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Full Name</p>
+                    <p class="text-base font-semibold text-gray-900">{{ client.full_name }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Phone Number</p>
+                    <p class="text-base font-semibold text-gray-900">{{ client.phone_number }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Package</p>
+                    <p class="text-base font-semibold text-gray-900">{{ client.package or 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Work Order</p>
+                    <p class="text-base font-semibold text-gray-900">{{ client.work_order or 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Ground Location</p>
+                    <p class="text-base font-semibold text-gray-900">{{ client.ground_location or 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Virtual Location</p>
+                    <p class="text-base font-semibold text-gray-900">{{ client.virtual_location or 'N/A' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('connect_client', client_id=client.id) }}" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Ground Location (editable; pre-filled from client) -->
+                <div>
+                    <label for="ground_location" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-map-marker-alt mr-2"></i>Ground Location <span class="text-gray-500 font-normal">(editable)</span>
+                    </label>
+                    <input type="text" 
+                           id="ground_location" 
+                           name="ground_location" 
+                           value="{{ client.ground_location or '' }}"
+                           autocomplete="off"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                           placeholder="Enter or edit ground location">
+                    <p class="text-xs text-gray-500 mt-1">You can change this if the installation address is different.</p>
+                </div>
+                
+                <!-- Serial Number -->
+                <div>
+                    <label for="serial_number" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-barcode mr-2"></i>Serial Number <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex space-x-2">
+                        <input type="text" 
+                               id="serial_number" 
+                               name="serial_number" 
+                               required
+                               class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                               placeholder="Enter serial number or scan barcode">
+                        <button type="button" 
+                                id="scan-barcode-btn"
+                                class="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center">
+                            <i class="fas fa-camera mr-2"></i>
+                            <span class="hidden sm:inline">Scan</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Power Levels -->
+                <div>
+                    <label for="power_levels" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-bolt mr-2"></i>Power Levels
+                    </label>
+                    <input type="text" 
+                           id="power_levels" 
+                           name="power_levels" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                           placeholder="Enter power levels">
+                </div>
+                
+                <!-- Router Type -->
+                <div>
+                    <label for="router_type" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-tag mr-2"></i>Router Type <span class="text-red-500">*</span>
+                    </label>
+                    <select id="router_type"
+                            name="router_type"
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                        <option value="">Select router type</option>
+                        <option value="Huawei">Huawei</option>
+                        <option value="Nokia">Nokia</option>
+                        <option value="Tender">Tender</option>
+                    </select>
+                </div>
+
+                <!-- Router Name -->
+                <div>
+                    <label for="router_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-router mr-2"></i>Router Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" 
+                           id="router_name" 
+                           name="router_name" 
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                           placeholder="Enter router name/model">
+                </div>
+                
+                <!-- Router Password -->
+                <div>
+                    <label for="router_password" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-2"></i>Router Password <span class="text-red-500">*</span>
+                    </label>
+                    <input type="password" 
+                           id="router_password" 
+                           name="router_password" 
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                           placeholder="Enter router password">
+                    <button type="button" 
+                            id="toggle-password"
+                            class="mt-2 text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                        <i class="fas fa-eye mr-1"></i>
+                        <span>Show Password</span>
+                    </button>
+                </div>
+                
+                <!-- Port Number -->
+                <div>
+                    <label for="port_number" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-plug mr-2"></i>Port Number
+                    </label>
+                    <input type="text" 
+                           id="port_number" 
+                           name="port_number" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                           placeholder="Enter port number">
+                </div>
+            </div>
+            
+            <!-- Submit and Cancel Buttons -->
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <a href="{{ url_for('dashboard') }}" 
+                   class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition duration-200 flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Dashboard
+                </a>
+                <button type="submit" 
+                        class="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition duration-200 flex items-center">
+                    <i class="fas fa-plug mr-2"></i>
+                    Connect Client
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Barcode Scanner Modal -->
+<div id="scanner-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-800">
+                <i class="fas fa-barcode mr-2"></i>Scan Barcode
+            </h3>
+            <button type="button" 
+                    id="close-scanner-btn"
+                    class="text-gray-500 hover:text-gray-700 text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div id="scanner-container" class="mb-4">
+            <div id="scanner-viewport" class="w-full bg-gray-100 rounded-lg" style="height: 300px; position: relative;">
+                <video id="scanner-video" class="w-full h-full object-cover rounded-lg" autoplay playsinline></video>
+                <canvas id="scanner-canvas" class="hidden"></canvas>
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="border-2 border-blue-500 rounded-lg" style="width: 80%; height: 40%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="scanner-status" class="text-center text-sm text-gray-600 mb-4">
+            <i class="fas fa-info-circle mr-2"></i>
+            Position barcode within the frame
+        </div>
+        
+        <div class="flex space-x-3">
+            <button type="button" 
+                    id="stop-scanner-btn"
+                    class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200">
+                <i class="fas fa-stop mr-2"></i>Stop Scanning
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- QuaggaJS Barcode Scanner Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Ensure ground location input is always editable (e.g. after cache)
+    document.addEventListener('DOMContentLoaded', function() {
+        var groundInput = document.getElementById('ground_location');
+        if (groundInput) {
+            groundInput.removeAttribute('readonly');
+            groundInput.removeAttribute('disabled');
+        }
+    });
+
+    let scannerActive = false;
+    const scannerModal = document.getElementById('scanner-modal');
+    const scanBarcodeBtn = document.getElementById('scan-barcode-btn');
+    const closeScannerBtn = document.getElementById('close-scanner-btn');
+    const stopScannerBtn = document.getElementById('stop-scanner-btn');
+    const serialNumberInput = document.getElementById('serial_number');
+    const scannerStatus = document.getElementById('scanner-status');
+    const powerLevelsInput = document.getElementById('power_levels');
+
+    function normalizeSerial(code) {
+        if (code == null || code === '') return '';
+        let s = String(code).trim();
+        s = s.replace(/^\s*(S\/N|SN)\s*[:#-]?\s*/i, '');
+        s = s.replace(/[\s\-_:.\s]+/g, '');
+        s = s.replace(/[^0-9A-Za-z]/g, '');
+        return s;
+    }
+
+    // Quagga handler refs so we can remove them safely
+    let onDetectedHandler = null;
+    let onProcessedHandler = null;
+
+    // Stable detection: accept after 2 consistent reads (for alphanumeric serials e.g. 485754437F1140B5)
+    let lastCandidate = '';
+    let candidateCount = 0;
+    let candidateWindowStart = 0;
+    const STABLE_HITS_REQUIRED = 2;
+    const STABLE_WINDOW_MS = 2000;
+
+    function resetStability() {
+        lastCandidate = '';
+        candidateCount = 0;
+        candidateWindowStart = 0;
+    }
+
+    // Open scanner modal
+    if (scanBarcodeBtn) {
+        scanBarcodeBtn.addEventListener('click', () => {
+            scannerModal.classList.remove('hidden');
+            startScanner();
+        });
+    }
+
+    // Close scanner modal
+    if (closeScannerBtn) {
+        closeScannerBtn.addEventListener('click', () => {
+            stopScanner();
+            scannerModal.classList.add('hidden');
+        });
+    }
+
+    // Stop scanner
+    if (stopScannerBtn) {
+        stopScannerBtn.addEventListener('click', () => {
+            stopScanner();
+            scannerModal.classList.add('hidden');
+        });
+    }
+
+    // Close modal when clicking outside
+    scannerModal.addEventListener('click', (e) => {
+        if (e.target === scannerModal) {
+            stopScanner();
+            scannerModal.classList.add('hidden');
+        }
+    });
+
+    function startScanner() {
+        if (scannerActive) return;
+        
+        scannerStatus.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Starting camera...';
+        scannerActive = true;
+        resetStability();
+
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#scanner-viewport'),
+                constraints: {
+                    width: { ideal: 1280, max: 1920 },
+                    height: { ideal: 720, max: 1080 },
+                    facingMode: "environment"
+                }
+            },
+            decoder: {
+                readers: [
+                    "code_128_reader",
+                    "code_39_reader",
+                    "code_39_vin_reader",
+                    "ean_reader",
+                    "ean_8_reader",
+                    "codabar_reader",
+                    "upc_reader",
+                    "upc_e_reader",
+                    "i2of5_reader"
+                ],
+                multiple: false
+            },
+            locate: true,
+            locator: {
+                patchSize: "large",
+                halfSample: false
+            },
+            numOfWorkers: Math.max(2, (navigator.hardwareConcurrency || 4) - 1),
+            frequency: 15
+        }, function(err) {
+            if (err) {
+                console.error('Scanner initialization error:', err);
+                scannerStatus.innerHTML = '<i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>Camera access denied or not available';
+                scannerActive = false;
+                return;
+            }
+            
+            scannerStatus.innerHTML = '<i class="fas fa-info-circle mr-2"></i>Position barcode within the frame';
+            Quagga.start();
+        });
+
+        // Ensure we don't stack multiple listeners if modal opened repeatedly
+        if (onDetectedHandler) Quagga.offDetected(onDetectedHandler);
+        if (onProcessedHandler) Quagga.offProcessed(onProcessedHandler);
+
+        // Optional: update UI when Quagga is processing frames
+        onProcessedHandler = function() {
+            // no-op (kept for potential future debug overlays)
+        };
+        Quagga.onProcessed(onProcessedHandler);
+
+        // Handle successful barcode detection (stable detection filter)
+        onDetectedHandler = function(result) {
+            const raw = result?.codeResult?.code;
+            const code = normalizeSerial(raw);
+            if (!code || !serialNumberInput) return;
+
+            const now = Date.now();
+            if (code !== lastCandidate || (candidateWindowStart && (now - candidateWindowStart) > STABLE_WINDOW_MS)) {
+                lastCandidate = code;
+                candidateCount = 1;
+                candidateWindowStart = now;
+                scannerStatus.innerHTML = `<i class="fas fa-info-circle mr-2"></i>Reading... (${code})`;
+                return;
+            }
+
+            candidateCount += 1;
+            if (candidateCount < STABLE_HITS_REQUIRED) {
+                scannerStatus.innerHTML = `<i class="fas fa-info-circle mr-2"></i>Confirming... (${candidateCount}/${STABLE_HITS_REQUIRED})`;
+                return;
+            }
+
+            // Accept stable read
+            serialNumberInput.value = code;
+            scannerStatus.innerHTML = '<i class="fas fa-check-circle text-green-600 mr-2"></i>Barcode scanned successfully!';
+
+            setTimeout(() => {
+                stopScanner();
+                scannerModal.classList.add('hidden');
+                powerLevelsInput?.focus();
+            }, 400);
+        };
+        Quagga.onDetected(onDetectedHandler);
+    }
+
+    function stopScanner() {
+        if (scannerActive) {
+            try {
+                if (onDetectedHandler) Quagga.offDetected(onDetectedHandler);
+                if (onProcessedHandler) Quagga.offProcessed(onProcessedHandler);
+            } catch (e) {
+                // ignore
+            }
+            Quagga.stop();
+            scannerActive = false;
+            scannerStatus.innerHTML = '<i class="fas fa-info-circle mr-2"></i>Position barcode within the frame';
+            resetStability();
+        }
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        stopScanner();
+    });
+
+    // Toggle password visibility
+    const togglePasswordBtn = document.getElementById('toggle-password');
+    const routerPasswordInput = document.getElementById('router_password');
+    const togglePasswordText = document.getElementById('toggle-password-text');
+    
+    if (togglePasswordBtn && routerPasswordInput) {
+        togglePasswordBtn.addEventListener('click', () => {
+            const type = routerPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            routerPasswordInput.setAttribute('type', type);
+            
+            if (type === 'text') {
+                togglePasswordText.textContent = 'Hide Password';
+                togglePasswordBtn.querySelector('i').classList.remove('fa-eye');
+                togglePasswordBtn.querySelector('i').classList.add('fa-eye-slash');
+            } else {
+                togglePasswordText.textContent = 'Show Password';
+                togglePasswordBtn.querySelector('i').classList.remove('fa-eye-slash');
+                togglePasswordBtn.querySelector('i').classList.add('fa-eye');
+            }
+        });
+    }
+</script>
+{% endblock %}

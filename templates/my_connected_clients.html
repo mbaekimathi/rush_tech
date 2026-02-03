@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}My Connected Clients - RUSHTACH{% endblock %}
+
+{% block sidebar_content %}
+<!-- My Connected Clients Page Sidebar - Customize based on role -->
+<ul class="space-y-2">
+    <!-- Technician and Employee Sidebar Links -->
+    {% if (actual_role == 'Technician' or actual_role == 'Employee') or (actual_role == 'IT Support' and switched_role in ['Technician', 'Employee']) %}
+    <li>
+        <a href="{{ url_for('my_connected_clients') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'my_connected_clients' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-user-check w-5"></i>
+            <span>My Connected Clients</span>
+        </a>
+    </li>
+    {% endif %}
+    
+    {% if (actual_role == 'IT Support' and not switched_role) or actual_role == 'Admin' or (actual_role == 'IT Support' and switched_role == 'Admin') %}
+    <!-- IT Support and Admin Sidebar Links -->
+    <li>
+        <a href="{{ url_for('connected_clients') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'connected_clients' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-check-circle w-5"></i>
+            <span>Connected Clients</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('failed_connections') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'failed_connections' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-times-circle w-5"></i>
+            <span>Failed Connections</span>
+        </a>
+    </li>
+    {% endif %}
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">My Connected Clients</h1>
+                <p class="text-gray-600 mt-1">Clients you have successfully connected</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="bg-green-100 text-green-800 px-4 py-2 rounded-lg font-semibold">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Total: {{ my_connected_clients|length }} Connected
+                </div>
+                <a href="{{ url_for('accounts') }}" 
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Accounts
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Connected Clients Table -->
+    {% if my_connected_clients %}
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <i class="fas fa-hashtag mr-2"></i>Account Number
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <i class="fas fa-user mr-2"></i>Client Name
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <i class="fas fa-phone mr-2"></i>Phone Number
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <i class="fas fa-barcode mr-2"></i>Serial Number
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <i class="fas fa-bolt mr-2"></i>Power Levels
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <i class="fas fa-router mr-2"></i>Router Used
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <i class="fas fa-plug mr-2"></i>Port Number
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <i class="fas fa-calendar-alt mr-2"></i>Connection Date
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <i class="fas fa-tasks mr-2"></i>Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for client in my_connected_clients %}
+                    <tr class="hover:bg-gray-50 transition duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-gray-900">
+                                {{ client.account_number }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ client.full_name }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-600">
+                                <i class="fas fa-phone text-gray-400 mr-1"></i>
+                                {{ client.phone_number }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-600">
+                                {{ client.serial_number or 'N/A' }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-600">
+                                {{ client.power_levels or 'N/A' }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-600">
+                                {{ client.router_used or 'N/A' }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-600">
+                                {{ client.port_number or 'N/A' }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-600">
+                                {% if client.connection_date %}
+                                {{ client.connection_date.strftime('%b %d, %Y') }}
+                                <div class="text-xs text-gray-400">
+                                    {{ client.connection_date.strftime('%I:%M %p') }}
+                                </div>
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                {{ client.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-lg shadow-lg p-12 text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
+            <i class="fas fa-inbox text-gray-400 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">No Connected Clients</h3>
+        <p class="text-gray-600 mb-6">You haven't connected any clients yet.</p>
+        <a href="{{ url_for('accounts') }}" 
+           class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition duration-200">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Accounts
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

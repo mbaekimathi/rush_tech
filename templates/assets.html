@@ -1,0 +1,765 @@
+{% extends "base.html" %}
+
+{% block title %}Assets - RUSHTACH{% endblock %}
+
+{% block sidebar_content %}
+<!-- Assets Page Sidebar -->
+<ul class="space-y-2">
+    <li>
+        <a href="{{ url_for('closed_assets') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition duration-200 {% if current_endpoint == 'closed_assets' %}bg-red-50 text-red-600 font-semibold{% endif %}">
+            <i class="fas fa-boxes w-5"></i>
+            <span>Closed Assets</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Assets Management</h1>
+                <p class="text-gray-600 mt-2 text-sm sm:text-base">All assets and their current status</p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <!-- Serial Checker (Barcode Scan) -->
+                <button type="button"
+                        id="open-serial-checker"
+                        class="px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm sm:text-base text-center border border-indigo-200 bg-indigo-600 text-white hover:bg-indigo-700 transition duration-200 shadow-sm flex items-center justify-center">
+                    <i class="fas fa-barcode mr-2"></i>
+                    Check Serial (Scan)
+                </button>
+                <div class="bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm sm:text-base text-center sm:text-left border border-purple-200 shadow-sm">
+                    <i class="fas fa-box mr-2"></i>
+                    Total: {{ assets|length }} Assets
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live search by serial (last serial pre-filled for quick edit) -->
+    {% if assets %}
+    <div class="mb-4 sm:mb-6">
+        <label for="assets-serial-search" class="block text-sm font-medium text-gray-700 mb-2">
+            <i class="fas fa-search mr-2 text-purple-600"></i>
+            Search by serial number
+        </label>
+        <input type="text"
+               id="assets-serial-search"
+               value="{{ last_serial or '' }}"
+               class="w-full sm:max-w-md px-4 py-3 border border-gray-300 rounded-xl font-mono text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+               placeholder="Type to filter assets by serial...">
+        <p class="text-xs text-gray-500 mt-1">Last serial is pre-filled — edit and type to live-search.</p>
+        <p id="assets-search-count" class="text-xs text-gray-600 mt-1 hidden"></p>
+    </div>
+    {% endif %}
+
+    <!-- Serial Checker Modal -->
+    <div id="serial-checker-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-2xl p-6 max-w-xl w-full mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-800">
+                    <i class="fas fa-barcode mr-2"></i>Check Asset Serial
+                </h3>
+                <button type="button" id="close-serial-checker" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                    <div class="flex space-x-2 mb-3">
+                        <input type="text"
+                               id="serial-checker-input"
+                               class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition font-mono"
+                               placeholder="Enter or scan serial (e.g. 485754437279F6B5)">
+                        <button type="button"
+                                id="serial-checker-scan-btn"
+                                class="px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200 flex items-center justify-center">
+                            <i class="fas fa-camera mr-2"></i>
+                            <span class="hidden sm:inline">Scan</span>
+                        </button>
+                    </div>
+
+                    <button type="button"
+                            id="serial-checker-lookup-btn"
+                            class="w-full px-4 py-3 bg-gray-900 text-white rounded-lg hover:bg-black transition duration-200 font-semibold">
+                        <i class="fas fa-search mr-2"></i>Lookup
+                    </button>
+
+                    <div id="serial-checker-status" class="text-center text-sm text-gray-600 mt-3">
+                        <i class="fas fa-info-circle mr-2"></i>Scan a barcode or type a serial to check if it’s in use.
+                    </div>
+                </div>
+
+                <div>
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Result</p>
+                        <div id="serial-checker-result" class="text-sm text-gray-700">
+                            <span class="text-gray-500">No lookup yet.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scanner viewport -->
+            <div id="serial-scanner-container" class="mt-5 hidden">
+                <div id="serial-scanner-viewport" class="w-full bg-gray-100 rounded-lg" style="height: 280px; position: relative;"></div>
+                <p class="text-xs text-gray-600 mt-2 text-center">Position barcode within the frame</p>
+            </div>
+
+            <div class="flex justify-end mt-5">
+                <button type="button"
+                        id="close-serial-checker-bottom"
+                        class="px-5 py-2.5 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition duration-200">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assets Table -->
+    {% if assets %}
+    <!-- Desktop Table View -->
+    <div class="hidden lg:block bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gradient-to-r from-purple-50 to-indigo-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-box mr-2 text-purple-600"></i>Asset Info
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-router mr-2 text-purple-600"></i>Router Info
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-map-marker-alt mr-2 text-purple-600"></i>Location & Assignment
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-calendar-alt mr-2 text-purple-600"></i>Purchase Info
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-tasks mr-2 text-purple-600"></i>Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                    {% for asset in assets %}
+                    <tr class="asset-row hover:bg-purple-50/50 transition-all duration-200 group" data-serial="{{ (asset.serial_number or '')|e }}">
+                        <td class="px-6 py-5">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Name:</span>
+                                    <span class="text-sm font-bold text-gray-900">{{ asset.asset_name or 'N/A' }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Type:</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ asset.asset_type or 'N/A' }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Serial:</span>
+                                    <span class="text-sm text-gray-700 font-mono">{{ asset.serial_number or 'N/A' }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="space-y-1.5">
+                                {% if asset.router_used or asset.router_name %}
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Router:</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ asset.router_name or asset.router_used or 'N/A' }}</span>
+                                </div>
+                                {% endif %}
+                                {% if asset.port_number %}
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Port:</span>
+                                    <span class="text-sm text-gray-700">{{ asset.port_number }}</span>
+                                </div>
+                                {% endif %}
+                                {% if asset.power_levels %}
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Power:</span>
+                                    <span class="text-sm text-gray-700">{{ asset.power_levels }}</span>
+                                </div>
+                                {% endif %}
+                                {% if not asset.router_used and not asset.router_name and not asset.port_number and not asset.power_levels %}
+                                <span class="text-xs text-gray-400">No router info</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="space-y-1.5">
+                                {% if asset.client_account_number or asset.client_full_name %}
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-user-circle text-indigo-500 text-xs"></i>
+                                    <span class="text-sm font-semibold text-gray-900">Account: {{ asset.client_account_number or 'N/A' }}</span>
+                                </div>
+                                {% if asset.client_full_name %}
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs text-gray-500">Client:</span>
+                                    <span class="text-sm text-gray-700">{{ asset.client_full_name }}</span>
+                                </div>
+                                {% endif %}
+                                {% endif %}
+                                {% if asset.location %}
+                                <div class="flex items-start space-x-2">
+                                    <i class="fas fa-map-marker-alt text-purple-500 text-xs mt-1"></i>
+                                    <span class="text-sm text-gray-700 max-w-xs truncate" title="{{ asset.location }}">
+                                        {{ asset.location }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                {% if asset.assigned_employee_name %}
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-user-tie text-gray-400 text-xs"></i>
+                                    <span class="text-sm text-gray-600">{{ asset.assigned_employee_name }}</span>
+                                </div>
+                                {% endif %}
+                                {% if not asset.client_account_number and not asset.client_full_name and not asset.location and not asset.assigned_employee_name %}
+                                <span class="text-xs text-gray-400">—</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm text-gray-700">
+                                {% if asset.purchase_date %}
+                                <div class="font-semibold">{{ asset.purchase_date.strftime('%b %d, %Y') if asset.purchase_date else 'N/A' }}</div>
+                                {% if asset.purchase_price %}
+                                <div class="text-xs text-gray-500 mt-0.5">
+                                    ${{ "%.2f"|format(asset.purchase_price) }}
+                                </div>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-gray-400">N/A</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            {% if asset.status == 'In Use' %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200">
+                                <i class="fas fa-check-circle mr-1.5"></i>
+                                {{ asset.status }}
+                            </span>
+                            {% elif asset.status == 'Relocated' %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200">
+                                <i class="fas fa-map-marker-alt mr-1.5"></i>
+                                {{ asset.status }}
+                            </span>
+                            {% elif asset.status == 'Renewed' %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200">
+                                <i class="fas fa-sync-alt mr-1.5"></i>
+                                {{ asset.status }}
+                            </span>
+                            {% elif asset.status == 'Reversed' %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 border border-orange-200">
+                                <i class="fas fa-undo mr-1.5"></i>
+                                {{ asset.status }}
+                            </span>
+                            {% elif asset.status == 'Closed' %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200">
+                                <i class="fas fa-times-circle mr-1.5"></i>
+                                {{ asset.status }}
+                            </span>
+                            {% else %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300">
+                                <i class="fas fa-question-circle mr-1.5"></i>
+                                {{ asset.status or 'Unknown' }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Mobile/Tablet Card View -->
+    <div class="lg:hidden space-y-4" id="assets-mobile-list">
+        {% for asset in assets %}
+        <div class="asset-card bg-white rounded-xl shadow-md border border-gray-200 p-5 hover:shadow-lg transition-shadow duration-200" data-serial="{{ (asset.serial_number or '')|e }}">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-900">{{ asset.asset_name or 'N/A' }}</h3>
+                    <p class="text-sm text-gray-600 mt-1">Serial: {{ asset.serial_number or 'N/A' }}</p>
+                    {% if asset.client_account_number or asset.client_full_name %}
+                    <p class="text-sm font-semibold text-indigo-700 mt-1">
+                        <i class="fas fa-user-circle mr-1"></i>Account: {{ asset.client_account_number or 'N/A' }}{% if asset.client_full_name %} — {{ asset.client_full_name }}{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+                {% if asset.status == 'In Use' %}
+                <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200 whitespace-nowrap">
+                    <i class="fas fa-check-circle mr-1.5"></i>
+                    {{ asset.status }}
+                </span>
+                {% elif asset.status == 'Relocated' %}
+                <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200 whitespace-nowrap">
+                    <i class="fas fa-map-marker-alt mr-1.5"></i>
+                    {{ asset.status }}
+                </span>
+                {% elif asset.status == 'Renewed' %}
+                <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200 whitespace-nowrap">
+                    <i class="fas fa-sync-alt mr-1.5"></i>
+                    {{ asset.status }}
+                </span>
+                {% elif asset.status == 'Reversed' %}
+                <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 border border-orange-200 whitespace-nowrap">
+                    <i class="fas fa-undo mr-1.5"></i>
+                    {{ asset.status }}
+                </span>
+                {% elif asset.status == 'Closed' %}
+                <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200 whitespace-nowrap">
+                    <i class="fas fa-times-circle mr-1.5"></i>
+                    {{ asset.status }}
+                </span>
+                {% else %}
+                <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300 whitespace-nowrap">
+                    <i class="fas fa-question-circle mr-1.5"></i>
+                    {{ asset.status or 'Unknown' }}
+                </span>
+                {% endif %}
+            </div>
+            
+            <div class="space-y-3">
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Asset Info</p>
+                    <div class="space-y-1.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Name:</span>
+                            <span class="text-sm font-semibold text-gray-800">{{ asset.asset_name or 'N/A' }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Type:</span>
+                            <span class="text-sm text-gray-700">{{ asset.asset_type or 'N/A' }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Serial:</span>
+                            <span class="text-sm text-gray-700 font-mono">{{ asset.serial_number or 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if asset.router_used or asset.router_name or asset.port_number or asset.power_levels %}
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Router Info</p>
+                    <div class="space-y-1.5">
+                        {% if asset.router_used or asset.router_name %}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Router:</span>
+                            <span class="text-sm font-semibold text-gray-800">{{ asset.router_name or asset.router_used or 'N/A' }}</span>
+                        </div>
+                        {% endif %}
+                        {% if asset.port_number %}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Port:</span>
+                            <span class="text-sm text-gray-700">{{ asset.port_number }}</span>
+                        </div>
+                        {% endif %}
+                        {% if asset.power_levels %}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Power:</span>
+                            <span class="text-sm text-gray-700">{{ asset.power_levels }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {% if asset.client_account_number or asset.client_full_name %}
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Account</p>
+                        <p class="text-sm font-semibold text-indigo-700">
+                            <i class="fas fa-user-circle mr-1"></i>
+                            {{ asset.client_account_number or 'N/A' }}{% if asset.client_full_name %} — {{ asset.client_full_name }}{% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                    {% if asset.location %}
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Location</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            <i class="fas fa-map-marker-alt text-purple-500 mr-1"></i>
+                            {{ asset.location }}
+                        </p>
+                    </div>
+                    {% endif %}
+                    {% if asset.assigned_employee_name %}
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Assigned To</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            <i class="fas fa-user-tie text-gray-400 mr-1"></i>
+                            {{ asset.assigned_employee_name }}
+                        </p>
+                    </div>
+                    {% endif %}
+                    {% if asset.purchase_date %}
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Purchase Date</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            <i class="fas fa-calendar text-gray-400 mr-1"></i>
+                            {{ asset.purchase_date.strftime('%b %d, %Y') if asset.purchase_date else 'N/A' }}
+                        </p>
+                    </div>
+                    {% endif %}
+                    {% if asset.purchase_price %}
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Purchase Price</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            <i class="fas fa-dollar-sign text-gray-400 mr-1"></i>
+                            ${{ "%.2f"|format(asset.purchase_price) }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 sm:p-12 text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-4">
+            <i class="fas fa-inbox text-gray-400 text-3xl sm:text-4xl"></i>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">No Assets Found</h3>
+        <p class="text-sm sm:text-base text-gray-600 mb-6">There are currently no assets in the system.</p>
+    </div>
+    {% endif %}
+
+    <!-- Serial filter: runs on DOMContentLoaded so filtering works even if other scripts fail -->
+    {% if assets %}
+    <script>
+    (function() {
+        function initFilter() {
+            var inp = document.getElementById('assets-serial-search');
+            if (!inp) return;
+            function norm(s) { return (s == null ? '' : String(s).trim().toLowerCase().replace(/[\s\-_:]+/g, '')); }
+            function filter() {
+                var q = norm(inp.value);
+                var visible = 0;
+                document.querySelectorAll('.asset-row').forEach(function(tr) {
+                    var match = !q || norm(tr.getAttribute('data-serial') || '').indexOf(q) !== -1;
+                    tr.style.display = match ? '' : 'none';
+                    if (match) visible++;
+                });
+                document.querySelectorAll('.asset-card').forEach(function(card) {
+                    var match = !q || norm(card.getAttribute('data-serial') || '').indexOf(q) !== -1;
+                    card.style.display = match ? '' : 'none';
+                });
+                var countEl = document.getElementById('assets-search-count');
+                if (countEl) {
+                    if (q) { countEl.style.display = 'block'; countEl.textContent = 'Showing ' + visible + ' asset(s) matching "' + inp.value.trim() + '"'; }
+                    else { countEl.style.display = 'none'; }
+                }
+            }
+            inp.oninput = filter;
+            inp.onkeyup = filter;
+            inp.onpaste = function() { setTimeout(filter, 0); };
+            filter();
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initFilter);
+        else initFilter();
+    })();
+    </script>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- QuaggaJS Barcode Scanner Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script>
+    const modal = document.getElementById('serial-checker-modal');
+    const openBtn = document.getElementById('open-serial-checker');
+    const closeBtn = document.getElementById('close-serial-checker');
+    const closeBtnBottom = document.getElementById('close-serial-checker-bottom');
+    const input = document.getElementById('serial-checker-input');
+    const scanBtn = document.getElementById('serial-checker-scan-btn');
+    const lookupBtn = document.getElementById('serial-checker-lookup-btn');
+    const statusEl = document.getElementById('serial-checker-status');
+    const resultEl = document.getElementById('serial-checker-result');
+    const scannerContainer = document.getElementById('serial-scanner-container');
+    const scannerViewport = document.getElementById('serial-scanner-viewport');
+
+    let scannerActive = false;
+    let onDetectedHandler = null;
+    let onProcessedHandler = null;
+
+    // Stable detection: accept after 2 consistent reads within window (faster for alphanumeric serials like 485754437F1140B5)
+    let lastCandidate = '';
+    let candidateCount = 0;
+    let candidateWindowStart = 0;
+    const STABLE_HITS_REQUIRED = 2;
+    const STABLE_WINDOW_MS = 2000;
+
+    function normalizeSerial(code) {
+        if (code == null || code === '') return '';
+        let s = String(code).trim();
+        s = s.replace(/^\s*(S\/N|SN)\s*[:#-]?\s*/i, '');
+        s = s.replace(/[\s\-_:.\s]+/g, '');
+        s = s.replace(/[^0-9A-Za-z]/g, '');
+        return s;
+    }
+
+    function resetStability() {
+        lastCandidate = '';
+        candidateCount = 0;
+        candidateWindowStart = 0;
+    }
+
+    function renderResult(data) {
+        if (!data?.ok) {
+            resultEl.innerHTML = `<span class="text-red-700 font-semibold">Lookup failed</span>`;
+            return;
+        }
+        if (!data.exists) {
+            resultEl.innerHTML = `
+                <div class="space-y-2">
+                    <div><span class="text-xs text-gray-500">Serial</span><div class="font-mono font-semibold">${data.serial}</div></div>
+                    <div class="px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-green-800 font-semibold">
+                        <i class="fas fa-check-circle mr-2"></i>Not found in DB (Not in use)
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        const inUseBadge = data.in_use
+            ? `<div class="px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 font-semibold"><i class="fas fa-check-circle mr-2"></i>In use</div>`
+            : `<div class="px-3 py-2 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-800 font-semibold"><i class="fas fa-info-circle mr-2"></i>Found, but not marked in use</div>`;
+
+        const clientHtml = data.client
+            ? `
+                <div class="mt-3">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Client</p>
+                    <div class="space-y-1">
+                        <div><span class="text-xs text-gray-500">Account</span> <span class="font-semibold">${data.client.account_number || 'N/A'}</span></div>
+                        <div><span class="text-xs text-gray-500">Name</span> <span class="font-semibold">${data.client.full_name || 'N/A'}</span></div>
+                        <div><span class="text-xs text-gray-500">Phone</span> <span class="font-mono">${data.client.phone_number || 'N/A'}</span></div>
+                    </div>
+                </div>
+              `
+            : `<div class="mt-3 text-sm text-gray-500">No client linked to this asset.</div>`;
+
+        resultEl.innerHTML = `
+            <div class="space-y-2">
+                <div><span class="text-xs text-gray-500">Serial</span><div class="font-mono font-semibold">${data.serial}</div></div>
+                ${inUseBadge}
+                <div class="text-sm text-gray-700">
+                    <span class="text-xs text-gray-500">Asset status:</span> <span class="font-semibold">${data.asset?.status || 'N/A'}</span>
+                </div>
+                ${clientHtml}
+            </div>
+        `;
+    }
+
+    async function lookupSerial() {
+        const serial = normalizeSerial(input.value);
+        input.value = serial;
+        if (!serial) {
+            statusEl.innerHTML = '<i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>Please enter or scan a serial.';
+            return;
+        }
+        statusEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Looking up...';
+        resultEl.innerHTML = '<span class="text-gray-500">Searching…</span>';
+        try {
+            const res = await fetch(`/api/serial-lookup?serial=${encodeURIComponent(serial)}`);
+            const data = await res.json();
+            if (!res.ok) {
+                statusEl.innerHTML = `<i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>${data?.error || 'Lookup failed'}`;
+                renderResult({ ok: false });
+                return;
+            }
+            statusEl.innerHTML = '<i class="fas fa-check-circle text-green-600 mr-2"></i>Lookup complete.';
+            renderResult(data);
+        } catch (e) {
+            statusEl.innerHTML = '<i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>Network error.';
+            renderResult({ ok: false });
+        }
+    }
+
+    function startScanner() {
+        if (scannerActive) return;
+        scannerActive = true;
+        resetStability();
+        scannerContainer.classList.remove('hidden');
+        statusEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Starting camera...';
+
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: scannerViewport,
+                constraints: {
+                    width: { ideal: 1280, max: 1920 },
+                    height: { ideal: 720, max: 1080 },
+                    facingMode: "environment"
+                }
+            },
+            decoder: {
+                readers: [
+                    "code_128_reader",
+                    "code_39_reader",
+                    "code_39_vin_reader",
+                    "ean_reader",
+                    "ean_8_reader",
+                    "codabar_reader",
+                    "upc_reader",
+                    "upc_e_reader",
+                    "i2of5_reader"
+                ],
+                multiple: false
+            },
+            locate: true,
+            locator: {
+                patchSize: "large",
+                halfSample: false
+            },
+            numOfWorkers: Math.max(2, (navigator.hardwareConcurrency || 4) - 1),
+            frequency: 15
+        }, function(err) {
+            if (err) {
+                console.error('Scanner init error:', err);
+                statusEl.innerHTML = '<i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>Camera access denied or not available';
+                scannerActive = false;
+                scannerContainer.classList.add('hidden');
+                return;
+            }
+            statusEl.innerHTML = '<i class="fas fa-info-circle mr-2"></i>Position barcode within the frame';
+            Quagga.start();
+        });
+
+        if (onDetectedHandler) Quagga.offDetected(onDetectedHandler);
+        if (onProcessedHandler) Quagga.offProcessed(onProcessedHandler);
+        onProcessedHandler = function() {};
+        Quagga.onProcessed(onProcessedHandler);
+
+        onDetectedHandler = function(result) {
+            const raw = result?.codeResult?.code;
+            const code = normalizeSerial(raw);
+            if (!code) return;
+
+            const now = Date.now();
+            if (code !== lastCandidate || (candidateWindowStart && (now - candidateWindowStart) > STABLE_WINDOW_MS)) {
+                lastCandidate = code;
+                candidateCount = 1;
+                candidateWindowStart = now;
+                statusEl.innerHTML = `<i class="fas fa-info-circle mr-2"></i>Reading... (${code})`;
+                return;
+            }
+            candidateCount += 1;
+            if (candidateCount < STABLE_HITS_REQUIRED) {
+                statusEl.innerHTML = `<i class="fas fa-info-circle mr-2"></i>Confirming... (${candidateCount}/${STABLE_HITS_REQUIRED})`;
+                return;
+            }
+
+            input.value = code;
+            statusEl.innerHTML = '<i class="fas fa-check-circle text-green-600 mr-2"></i>Barcode captured. Looking up...';
+            stopScanner();
+            lookupSerial();
+        };
+        Quagga.onDetected(onDetectedHandler);
+    }
+
+    function stopScanner() {
+        if (!scannerActive) return;
+        try {
+            if (onDetectedHandler) Quagga.offDetected(onDetectedHandler);
+            if (onProcessedHandler) Quagga.offProcessed(onProcessedHandler);
+        } catch (e) {}
+        try { Quagga.stop(); } catch (e) {}
+        scannerActive = false;
+        resetStability();
+        scannerContainer.classList.add('hidden');
+    }
+
+    function openModal() {
+        modal.classList.remove('hidden');
+        statusEl.innerHTML = '<i class="fas fa-info-circle mr-2"></i>Scan a barcode or type a serial to check if it’s in use.';
+        resultEl.innerHTML = '<span class="text-gray-500">No lookup yet.</span>';
+        input.value = '';
+        input.focus();
+    }
+
+    function closeModal() {
+        stopScanner();
+        modal.classList.add('hidden');
+    }
+
+    openBtn?.addEventListener('click', openModal);
+    closeBtn?.addEventListener('click', closeModal);
+    closeBtnBottom?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    scanBtn?.addEventListener('click', () => startScanner());
+    lookupBtn?.addEventListener('click', lookupSerial);
+    input?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            lookupSerial();
+        }
+    });
+
+    window.addEventListener('beforeunload', () => stopScanner());
+
+    // Live search by serial — updates list as user types or edits
+    function initAssetsSerialSearch() {
+        const searchInput = document.getElementById('assets-serial-search');
+        const countEl = document.getElementById('assets-search-count');
+        if (!searchInput) return;
+
+        function normalizeForSearch(s) {
+            if (s == null) return '';
+            return String(s).trim().toLowerCase().replace(/[\s\-_:]+/g, '');
+        }
+
+        function filterAssets() {
+            const q = normalizeForSearch(searchInput.value);
+            const rows = document.querySelectorAll('.asset-row');
+            const cards = document.querySelectorAll('.asset-card');
+            let visible = 0;
+
+            rows.forEach(function(tr) {
+                const serial = (tr.getAttribute('data-serial') || '');
+                const match = !q || normalizeForSearch(serial).indexOf(q) !== -1;
+                tr.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+            cards.forEach(function(card) {
+                const serial = (card.getAttribute('data-serial') || '');
+                const match = !q || normalizeForSearch(serial).indexOf(q) !== -1;
+                card.style.display = match ? '' : 'none';
+            });
+
+            if (countEl) {
+                if (q) {
+                    countEl.style.display = 'block';
+                    countEl.textContent = 'Showing ' + visible + ' asset(s) matching “‘ + searchInput.value.trim() + '”';
+                } else {
+                    countEl.style.display = 'none';
+                }
+            }
+        }
+
+        searchInput.oninput = filterAssets;
+        searchInput.onkeyup = filterAssets;
+        searchInput.onpaste = function() { setTimeout(filterAssets, 0); };
+        filterAssets();
+    }
+
+    function runSerialSearchInit() {
+        initAssetsSerialSearch();
+        setTimeout(initAssetsSerialSearch, 150);
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runSerialSearchInit);
+    } else {
+        runSerialSearchInit();
+    }
+</script>
+{% endblock %}

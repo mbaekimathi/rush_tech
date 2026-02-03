@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - RUSHTACH{% endblock %}
+
+{% block sidebar_content %}
+<!-- My Profile Page Sidebar - Customize based on role -->
+<ul class="space-y-2">
+    <!-- Add your profile-specific sidebar links here (role-based) -->
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">My Profile</h1>
+                <p class="text-gray-600 mt-1">View and edit your personal information</p>
+                <!-- Role Badge -->
+                <div class="mt-3">
+                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                        <i class="fas fa-user-shield mr-2"></i>
+                        Logged in as: <strong class="ml-1">{{ user.role }}</strong>
+                    </span>
+                </div>
+            </div>
+            <div class="flex flex-col items-center md:items-end gap-3">
+                <div class="w-20 h-20 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center border-4 border-blue-200">
+                    {% if user.profile_picture %}
+                    <img src="{{ url_for('static', filename=user.profile_picture) }}" alt="Profile" class="w-full h-full object-cover">
+                    {% else %}
+                    <i class="fas fa-user text-blue-600 text-3xl"></i>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Form -->
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            <!-- Personal Information Section -->
+            <div class="border-b border-gray-200 pb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-user-circle mr-2 text-blue-600"></i>
+                    Personal Information
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Full Name -->
+                    <div>
+                        <label for="full_name" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user mr-2"></i>Full Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" 
+                               id="full_name" 
+                               name="full_name" 
+                               value="{{ user.full_name }}" 
+                               required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-envelope mr-2"></i>Email Address <span class="text-red-500">*</span>
+                        </label>
+                        <input type="email" 
+                               id="email" 
+                               name="email" 
+                               value="{{ user.email }}" 
+                               required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div>
+                        <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-phone mr-2"></i>Phone Number
+                        </label>
+                        <input type="tel" 
+                               id="phone_number" 
+                               name="phone_number" 
+                               value="{{ user.phone_number or '' }}" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <!-- Profile Picture -->
+                    <div>
+                        <label for="profile_picture" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-image mr-2"></i>Profile Picture
+                        </label>
+                        <input type="file" 
+                               id="profile_picture" 
+                               name="profile_picture" 
+                               accept="image/png,image/jpeg,image/jpg,image/gif"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Allowed: PNG, JPG, JPEG, GIF (Max 5MB)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Information Section -->
+            <div class="border-b border-gray-200 pb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-info-circle mr-2 text-blue-600"></i>
+                    Account Information
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Username (Read-only) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user-tag mr-2"></i>Username
+                        </label>
+                        <input type="text" 
+                               value="{{ user.username }}" 
+                               disabled
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+                        <p class="text-xs text-gray-500 mt-1">Username cannot be changed</p>
+                    </div>
+
+                    <!-- Verification Code (Read-only) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-key mr-2"></i>Verification Code
+                        </label>
+                        <input type="text" 
+                               value="{{ user.verification_code }}" 
+                               disabled
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+                        <p class="text-xs text-gray-500 mt-1">6-digit code for login</p>
+                    </div>
+
+                    <!-- Role (Read-only) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user-shield mr-2"></i>Current Role
+                        </label>
+                        <div class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-blue-50 flex items-center">
+                            <span class="text-blue-800 font-semibold">{{ user.role }}</span>
+                            <i class="fas fa-check-circle text-blue-600 ml-2"></i>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Your current role in the system</p>
+                    </div>
+
+                    <!-- Status (Read-only) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-check-circle mr-2"></i>Status
+                        </label>
+                        <input type="text" 
+                               value="{{ user.status }}" 
+                               disabled
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password Change Section -->
+            <div class="border-b border-gray-200 pb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-lock mr-2 text-blue-600"></i>
+                    Change Password
+                </h2>
+                <p class="text-sm text-gray-600 mb-4">Leave blank if you don't want to change your password</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Current Password -->
+                    <div>
+                        <label for="current_password" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-lock mr-2"></i>Current Password
+                        </label>
+                        <input type="password" 
+                               id="current_password" 
+                               name="current_password" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <!-- New Password -->
+                    <div>
+                        <label for="new_password" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-key mr-2"></i>New Password
+                        </label>
+                        <input type="password" 
+                               id="new_password" 
+                               name="new_password" 
+                               minlength="6"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="md:col-span-2">
+                        <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-check-double mr-2"></i>Confirm New Password
+                        </label>
+                        <input type="password" 
+                               id="confirm_password" 
+                               name="confirm_password" 
+                               minlength="6"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Created Date (Read-only) -->
+            <div class="pb-6">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-sm text-gray-600">
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        <strong>Account Created:</strong> 
+                        {{ user.created_at.strftime('%B %d, %Y at %I:%M %p') if user.created_at else 'N/A' }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                <button type="submit" 
+                        class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 flex items-center justify-center">
+                    <i class="fas fa-save mr-2"></i>
+                    Save Changes
+                </button>
+                <a href="{{ url_for('dashboard') }}" 
+                   class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition duration-200 flex items-center justify-center">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Password matching validation
+    const newPassword = document.getElementById('new_password');
+    const confirmPassword = document.getElementById('confirm_password');
+    
+    function validatePasswords() {
+        if (newPassword.value && confirmPassword.value) {
+            if (newPassword.value !== confirmPassword.value) {
+                confirmPassword.setCustomValidity('Passwords do not match');
+            } else {
+                confirmPassword.setCustomValidity('');
+            }
+        } else {
+            confirmPassword.setCustomValidity('');
+        }
+    }
+    
+    if (newPassword && confirmPassword) {
+        newPassword.addEventListener('input', validatePasswords);
+        confirmPassword.addEventListener('input', validatePasswords);
+    }
+</script>
+{% endblock %}

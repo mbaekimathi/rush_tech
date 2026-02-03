@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+
+{% block title %}Relocate Client - RUSHTACH{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Relocate Client</h1>
+                <p class="text-gray-600 mt-1">Update client location and connection details</p>
+            </div>
+            <a href="{{ url_for('dispatcher_connected_accounts') }}" 
+               class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition duration-200 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Connected Accounts
+            </a>
+        </div>
+    </div>
+
+    <!-- Client Information Card -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Client Information</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <p class="text-sm text-gray-600">Account Number</p>
+                <p class="text-lg font-semibold text-gray-900">{{ client.account_number }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Client Name</p>
+                <p class="text-lg font-semibold text-gray-900">{{ client.full_name }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Phone Number</p>
+                <p class="text-lg text-gray-900">{{ client.phone_number }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Current Location</p>
+                <p class="text-lg text-gray-900">{{ client.current_location or 'N/A' }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Current Port</p>
+                <p class="text-lg text-gray-900">{{ client.current_port or 'N/A' }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Relocation Count</p>
+                <p class="text-lg font-semibold text-blue-600">{{ client.relocation_count or 0 }} times</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Relocation Form -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">New Location Details</h2>
+        <form method="POST" action="{{ url_for('relocate_client', client_id=client.id) }}">
+            <div class="space-y-6">
+                <!-- New Location -->
+                <div>
+                    <label for="new_location" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-map-marker-alt mr-2"></i>New Ground Location <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text"
+                           id="new_location"
+                           name="new_location"
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                           placeholder="Enter new ground location">
+                </div>
+
+                <!-- New Port -->
+                <div>
+                    <label for="new_port" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-plug mr-2"></i>New Port Number <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text"
+                           id="new_port"
+                           name="new_port"
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                           placeholder="Enter new port number">
+                </div>
+
+                <!-- Assigned To (with live search) -->
+                <div>
+                    <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user-tie mr-2"></i>Assigned To
+                        <span class="text-xs text-gray-500 ml-2">(Leave blank to use your details)</span>
+                    </label>
+                    <div class="relative">
+                        <input type="text"
+                               id="assigned_to_search"
+                               autocomplete="off"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                               placeholder="Search employee by name or username...">
+                        <input type="hidden" id="assigned_to" name="assigned_to" value="">
+                        <div id="employee-results" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Default: {{ current_user.full_name if current_user else 'Current User' }}</p>
+                </div>
+
+                <!-- New Router Type -->
+                <div>
+                    <label for="new_router_type" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-tag mr-2"></i>Router Type <span class="text-red-500">*</span>
+                    </label>
+                    <select id="new_router_type"
+                            name="new_router_type"
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                        <option value="">Select router type</option>
+                        <option value="Huawei">Huawei</option>
+                        <option value="Nokia">Nokia</option>
+                        <option value="Tender">Tender</option>
+                    </select>
+                </div>
+
+                <!-- New Router Name -->
+                <div>
+                    <label for="new_router" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-router mr-2"></i>New Router Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text"
+                           id="new_router"
+                           name="new_router"
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                           placeholder="Enter new router name/model">
+                </div>
+
+                <!-- New Router Password -->
+                <div>
+                    <label for="new_router_password" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-2"></i>New Router Password <span class="text-red-500">*</span>
+                    </label>
+                    <input type="password"
+                           id="new_router_password"
+                           name="new_router_password"
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                           placeholder="Enter new router password">
+                    <button type="button" 
+                            id="toggle-password-relocate"
+                            class="mt-2 text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                        <i class="fas fa-eye mr-1"></i>
+                        <span id="toggle-password-text-relocate">Show Password</span>
+                    </button>
+                </div>
+
+                <!-- New Serial Number (with barcode scan) -->
+                <div>
+                    <label for="new_serial_number" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-barcode mr-2"></i>New Serial Number <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex space-x-2">
+                        <input type="text"
+                               id="new_serial_number"
+                               name="new_serial_number"
+                               required
+                               class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                               placeholder="Enter serial number or scan barcode">
+                        <button type="button"
+                                id="scan-barcode-btn"
+                                class="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center">
+                            <i class="fas fa-camera mr-2"></i>
+                            <span class="hidden sm:inline">Scan</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex items-center justify-end space-x-4 pt-4">
+                    <a href="{{ url_for('dispatcher_connected_accounts') }}" 
+                       class="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition duration-200">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition duration-200">
+                        <i class="fas fa-check mr-2"></i>
+                        Relocate Client
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Barcode Scanner Modal -->
+<div id="scanner-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">Scan Barcode</h3>
+            <button type="button" id="close-scanner" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div id="scanner-viewport" class="w-full h-64 bg-gray-100 rounded-lg mb-4"></div>
+        <p class="text-sm text-gray-600 text-center">Position barcode within the camera view</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script>
+    // Employee Live Search
+    const assignedToSearch = document.getElementById('assigned_to_search');
+    const assignedToInput = document.getElementById('assigned_to');
+    const employeeResults = document.getElementById('employee-results');
+    let searchTimeout;
+
+    assignedToSearch.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        clearTimeout(searchTimeout);
+        
+        if (query.length < 2) {
+            employeeResults.classList.add('hidden');
+            assignedToInput.value = '';
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            fetch(`{{ url_for('search_employees') }}?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(employees => {
+                    if (employees.length === 0) {
+                        employeeResults.innerHTML = '<div class="p-4 text-sm text-gray-500 text-center">No employees found</div>';
+                    } else {
+                        employeeResults.innerHTML = employees.map(emp => `
+                            <div class="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0" 
+                                 onclick="selectEmployee(${emp.id}, '${emp.full_name.replace(/'/g, "\\'")}')">
+                                <div class="font-semibold text-gray-900">${emp.full_name}</div>
+                                <div class="text-xs text-gray-500">${emp.username} • ${emp.role}</div>
+                            </div>
+                        `).join('');
+                    }
+                    employeeResults.classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error searching employees:', error);
+                });
+        }, 300);
+    });
+
+    function selectEmployee(id, name) {
+        assignedToInput.value = id;
+        assignedToSearch.value = name;
+        employeeResults.classList.add('hidden');
+    }
+
+    // Close employee results when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('#assigned_to_search') && !event.target.closest('#employee-results')) {
+            employeeResults.classList.add('hidden');
+        }
+    });
+
+    // Barcode Scanner
+    const scanBtn = document.getElementById('scan-barcode-btn');
+    const scannerModal = document.getElementById('scanner-modal');
+    const closeScanner = document.getElementById('close-scanner');
+    const scannerViewport = document.getElementById('scanner-viewport');
+    const serialNumberInput = document.getElementById('new_serial_number');
+    let scannerActive = false;
+
+    function normalizeSerial(code) {
+        if (code == null || code === '') return '';
+        let s = String(code).trim();
+        s = s.replace(/^\s*(S\/N|SN)\s*[:#-]?\s*/i, '');
+        s = s.replace(/[\s\-_:.\s]+/g, '');
+        s = s.replace(/[^0-9A-Za-z]/g, '');
+        return s;
+    }
+
+    let onDetectedHandler = null;
+    let onProcessedHandler = null;
+
+    let lastCandidate = '';
+    let candidateCount = 0;
+    let candidateWindowStart = 0;
+    const STABLE_HITS_REQUIRED = 2;
+    const STABLE_WINDOW_MS = 2000;
+
+    function resetStability() {
+        lastCandidate = '';
+        candidateCount = 0;
+        candidateWindowStart = 0;
+    }
+
+    scanBtn.addEventListener('click', function() {
+        scannerModal.classList.remove('hidden');
+        startScanner();
+    });
+
+    closeScanner.addEventListener('click', function() {
+        stopScanner();
+        scannerModal.classList.add('hidden');
+    });
+
+    scannerModal.addEventListener('click', function(event) {
+        if (event.target === scannerModal) {
+            stopScanner();
+            scannerModal.classList.add('hidden');
+        }
+    });
+
+    function startScanner() {
+        if (scannerActive) return;
+        resetStability();
+        
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: scannerViewport,
+                constraints: {
+                    width: { ideal: 1280, max: 1920 },
+                    height: { ideal: 720, max: 1080 },
+                    facingMode: "environment"
+                }
+            },
+            decoder: {
+                readers: ["code_128_reader", "code_39_reader", "code_39_vin_reader", "ean_reader", "ean_8_reader", "codabar_reader", "upc_reader", "upc_e_reader", "i2of5_reader"],
+                multiple: false
+            },
+            locate: true,
+            locator: { patchSize: "large", halfSample: false },
+            numOfWorkers: Math.max(2, (navigator.hardwareConcurrency || 4) - 1),
+            frequency: 15
+        }, function(err) {
+            if (err) {
+                console.error('Scanner initialization error:', err);
+                alert('Failed to initialize barcode scanner. Please check camera permissions.');
+                scannerModal.classList.add('hidden');
+                return;
+            }
+            scannerActive = true;
+            Quagga.start();
+        });
+
+        // Prevent stacking handlers on repeated opens
+        if (onDetectedHandler) Quagga.offDetected(onDetectedHandler);
+        if (onProcessedHandler) Quagga.offProcessed(onProcessedHandler);
+
+        onProcessedHandler = function() {};
+        Quagga.onProcessed(onProcessedHandler);
+
+        onDetectedHandler = function(result) {
+            const raw = result?.codeResult?.code;
+            const code = normalizeSerial(raw);
+            if (!code || !serialNumberInput) return;
+
+            const now = Date.now();
+            if (code !== lastCandidate || (candidateWindowStart && (now - candidateWindowStart) > STABLE_WINDOW_MS)) {
+                lastCandidate = code;
+                candidateCount = 1;
+                candidateWindowStart = now;
+                return;
+            }
+
+            candidateCount += 1;
+            if (candidateCount < STABLE_HITS_REQUIRED) return;
+
+            serialNumberInput.value = code;
+            stopScanner();
+            scannerModal.classList.add('hidden');
+        };
+        Quagga.onDetected(onDetectedHandler);
+    }
+
+    function stopScanner() {
+        if (scannerActive) {
+            try {
+                if (onDetectedHandler) Quagga.offDetected(onDetectedHandler);
+                if (onProcessedHandler) Quagga.offProcessed(onProcessedHandler);
+            } catch (e) {
+                // ignore
+            }
+            Quagga.stop();
+            scannerActive = false;
+            resetStability();
+        }
+    }
+
+    // Toggle password visibility for relocation form
+    const togglePasswordBtnRelocate = document.getElementById('toggle-password-relocate');
+    const routerPasswordInputRelocate = document.getElementById('new_router_password');
+    const togglePasswordTextRelocate = document.getElementById('toggle-password-text-relocate');
+    
+    if (togglePasswordBtnRelocate && routerPasswordInputRelocate) {
+        togglePasswordBtnRelocate.addEventListener('click', () => {
+            const type = routerPasswordInputRelocate.getAttribute('type') === 'password' ? 'text' : 'password';
+            routerPasswordInputRelocate.setAttribute('type', type);
+            
+            if (type === 'text') {
+                togglePasswordTextRelocate.textContent = 'Hide Password';
+                togglePasswordBtnRelocate.querySelector('i').classList.remove('fa-eye');
+                togglePasswordBtnRelocate.querySelector('i').classList.add('fa-eye-slash');
+            } else {
+                togglePasswordTextRelocate.textContent = 'Show Password';
+                togglePasswordBtnRelocate.querySelector('i').classList.remove('fa-eye-slash');
+                togglePasswordBtnRelocate.querySelector('i').classList.add('fa-eye');
+            }
+        });
+    }
+</script>
+{% endblock %}

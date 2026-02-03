@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+
+{% block title %}Finance - RUSHTACH{% endblock %}
+
+{% block sidebar_content %}
+<!-- Finance Page Sidebar -->
+<ul class="space-y-2">
+    <li>
+        <a href="{{ url_for('finance') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'finance' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-dollar-sign w-5"></i>
+            <span>Finance Overview</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('finance_transactions') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition duration-200 {% if current_endpoint == 'finance_transactions' %}bg-purple-50 text-purple-600 font-semibold{% endif %}">
+            <i class="fas fa-chart-line w-5"></i>
+            <span>Finance Transactions</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('closed_assets') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition duration-200 {% if current_endpoint == 'closed_assets' %}bg-red-50 text-red-600 font-semibold{% endif %}">
+            <i class="fas fa-boxes w-5"></i>
+            <span>Closed Assets</span>
+        </a>
+    </li>
+    <li class="pt-2 border-t border-gray-200">
+        <p class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Finance Accounts</p>
+    </li>
+    <li>
+        <a href="{{ url_for('dispatcher_connected_accounts') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-50 text-gray-700 hover:text-green-600 transition duration-200 {% if current_endpoint == 'dispatcher_connected_accounts' %}bg-green-50 text-green-600 font-semibold{% endif %}">
+            <i class="fas fa-check-circle w-5"></i>
+            <span>Connected Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('relocated_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'relocated_routers' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-map-marker-alt w-5"></i>
+            <span>Relocated Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('renewed_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-50 text-gray-700 hover:text-green-600 transition duration-200 {% if current_endpoint == 'renewed_routers' %}bg-green-50 text-green-600 font-semibold{% endif %}">
+            <i class="fas fa-sync-alt w-5"></i>
+            <span>Renewed Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('reversed_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition duration-200 {% if current_endpoint == 'reversed_routers' %}bg-orange-50 text-orange-600 font-semibold{% endif %}">
+            <i class="fas fa-undo w-5"></i>
+            <span>Reversed Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('closed_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition duration-200 {% if current_endpoint == 'closed_routers' %}bg-red-50 text-red-600 font-semibold{% endif %}">
+            <i class="fas fa-times-circle w-5"></i>
+            <span>Closed Accounts</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Finance Overview</h1>
+                <p class="text-gray-600 mt-2 text-sm sm:text-base">All clients with their prices and asset usage</p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div class="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm sm:text-base text-center sm:text-left border border-green-200 shadow-sm">
+                    <i class="fas fa-users mr-2"></i>
+                    Total: {{ clients_data|length }} Clients
+                </div>
+                <div class="bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm sm:text-base text-center sm:text-left border border-purple-200 shadow-sm">
+                    <i class="fas fa-shopping-cart mr-2"></i>
+                    Total Sales: SHS {{ "%.2f"|format(total_sales) }}
+                </div>
+                <div class="bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm sm:text-base text-center sm:text-left border border-blue-200 shadow-sm">
+                    <i class="fas fa-tools mr-2"></i>
+                    Total Technical Cost: SHS {{ "%.2f"|format(total_technical_cost) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="mb-6 bg-white rounded-xl shadow-md border border-gray-200 p-4 sm:p-6">
+        <form method="GET" action="{{ url_for('finance') }}" id="filterForm" class="space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-filter mr-2 text-green-600"></i>Filter By:
+                    </label>
+                    <select name="filter_type" id="filter_type" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition">
+                        <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Time</option>
+                        <option value="day" {% if filter_type == 'day' %}selected{% endif %}>Specific Day</option>
+                        <option value="period" {% if filter_type == 'period' %}selected{% endif %}>Date Period (Range)</option>
+                        <option value="month" {% if filter_type == 'month' %}selected{% endif %}>Month</option>
+                    </select>
+                </div>
+                
+                <!-- Day Filter -->
+                <div id="day_filter" class="flex-1 {% if filter_type != 'day' %}hidden{% endif %}">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-calendar-day mr-2 text-blue-600"></i>Select Day:
+                    </label>
+                    <input type="date" 
+                           name="start_date" 
+                           id="day_date"
+                           value="{{ start_date if filter_type == 'day' else '' }}"
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                </div>
+                
+                <!-- Period Filter -->
+                <div id="period_filter" class="flex-1 {% if filter_type != 'period' %}hidden{% endif %}">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-calendar-alt mr-2 text-purple-600"></i>Start Date:
+                            </label>
+                            <input type="date" 
+                                   name="start_date" 
+                                   id="period_start_date"
+                                   value="{{ start_date if filter_type == 'period' else '' }}"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-calendar-check mr-2 text-purple-600"></i>End Date:
+                            </label>
+                            <input type="date" 
+                                   name="end_date" 
+                                   id="period_end_date"
+                                   value="{{ end_date if filter_type == 'period' else '' }}"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Month Filter -->
+                <div id="month_filter" class="flex-1 {% if filter_type != 'month' %}hidden{% endif %}">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-calendar mr-2 text-indigo-600"></i>Select Month:
+                    </label>
+                    <input type="month" 
+                           name="start_date" 
+                           id="month_date"
+                           value="{{ start_date if filter_type == 'month' else '' }}"
+                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition">
+                </div>
+                
+                <div class="flex items-end gap-2 sm:flex-col sm:items-stretch">
+                    <button type="submit" 
+                            class="px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center">
+                        <i class="fas fa-search mr-2"></i>
+                        <span class="hidden sm:inline">Apply Filter</span>
+                        <span class="sm:hidden">Filter</span>
+                    </button>
+                    {% if filter_type != 'all' %}
+                    <a href="{{ url_for('finance') }}" 
+                       class="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-200 flex items-center justify-center">
+                        <i class="fas fa-times mr-2"></i>
+                        <span class="hidden sm:inline">Clear</span>
+                        <span class="sm:hidden">Clear</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Finance Transactions Link -->
+    <div class="mb-8">
+        <a href="{{ url_for('finance_transactions') }}" 
+           class="inline-flex items-center justify-center w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-chart-line mr-3 text-xl"></i>
+            <span>View Finance Transactions</span>
+            <i class="fas fa-arrow-right ml-3"></i>
+        </a>
+    </div>
+
+    <!-- Clients Finance Table -->
+    {% if clients_data %}
+    <!-- Desktop Table View -->
+    <div class="hidden lg:block bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gradient-to-r from-green-50 to-emerald-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-user-circle mr-2 text-green-600"></i>Client Info
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-box mr-2 text-green-600"></i>Package
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-dollar-sign mr-2 text-green-600"></i>Sale Price
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-server mr-2 text-green-600"></i>Assets Used
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-tools mr-2 text-green-600"></i>Technical Cost
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-money-bill-wave mr-2 text-green-600"></i>Total Renewals
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-calendar-alt mr-2 text-green-600"></i>Payment Date
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-clock mr-2 text-green-600"></i>Created Date
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-tasks mr-2 text-green-600"></i>Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                    {% for client in clients_data %}
+                    <tr class="hover:bg-green-50/50 transition-all duration-200 group">
+                        <td class="px-6 py-5">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Account:</span>
+                                    <span class="text-sm font-bold text-gray-900">{{ client.account_number or 'N/A' }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-user text-gray-400 text-xs"></i>
+                                    <span class="text-sm font-semibold text-gray-800">{{ client.full_name or 'N/A' }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-layer-group text-gray-400 text-xs"></i>
+                                    <span class="px-2 py-0.5 inline-flex items-center rounded-full text-xs font-semibold
+                                        {% if client.client_category == 'Virtual' %}bg-indigo-100 text-indigo-700 border border-indigo-200{% else %}bg-emerald-100 text-emerald-700 border border-emerald-200{% endif %}">
+                                        {{ client.client_category or 'Actual' }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-phone text-gray-400 text-xs"></i>
+                                    <span class="text-sm text-gray-600">{{ client.phone_number or 'N/A' }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-gray-900">
+                                {{ client.package or 'N/A' }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-purple-700">
+                                {% if client.package_price and client.package_price > 0 %}
+                                    <span class="px-3 py-1.5 inline-flex items-center rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                                        <i class="fas fa-dollar-sign mr-1.5"></i>
+                                        SHS {{ "%.2f"|format(client.package_price) }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-gray-400">SHS 0.00</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <span class="px-3 py-1.5 inline-flex items-center text-sm font-semibold rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                                    <i class="fas fa-server mr-2"></i>
+                                    {{ client.asset_count or 0 }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-blue-700">
+                                {% if client.technical_cost and client.technical_cost > 0 %}
+                                    <span class="px-3 py-1.5 inline-flex items-center rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                                        <i class="fas fa-tools mr-1.5"></i>
+                                        SHS {{ "%.2f"|format(client.technical_cost) }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-gray-400">SHS 0.00</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-green-700">
+                                {% if client.total_renewal_amount and client.total_renewal_amount > 0 %}
+                                    <span class="px-3 py-1.5 inline-flex items-center rounded-full bg-green-100 text-green-800 border border-green-200">
+                                        <i class="fas fa-dollar-sign mr-1.5"></i>
+                                        SHS {{ "%.2f"|format(client.total_renewal_amount) }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-gray-400">SHS 0.00</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm text-gray-700">
+                                {% if client.payment_date %}
+                                <div class="font-semibold">{{ client.payment_date.strftime('%b %d, %Y') }}</div>
+                                {% else %}
+                                <span class="text-gray-400">N/A</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm text-gray-700">
+                                {% if client.created_at %}
+                                <div class="font-semibold">{{ client.created_at.strftime('%b %d, %Y') }}</div>
+                                <div class="text-xs text-gray-500 mt-0.5">
+                                    {{ client.created_at.strftime('%I:%M %p') }}
+                                </div>
+                                {% else %}
+                                <span class="text-gray-400">N/A</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            {% if client.status == 'Pending' %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200">
+                                <i class="fas fa-clock mr-1.5"></i>
+                                {{ client.status }}
+                            </span>
+                            {% elif client.status == 'Connected' %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200">
+                                <i class="fas fa-check-circle mr-1.5"></i>
+                                {{ client.status }}
+                            </span>
+                            {% elif client.status == 'Relocated' %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200">
+                                <i class="fas fa-map-marker-alt mr-1.5"></i>
+                                {{ client.status }}
+                            </span>
+                            {% elif client.status == 'Renewed' %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200">
+                                <i class="fas fa-sync-alt mr-1.5"></i>
+                                {{ client.status }}
+                            </span>
+                            {% elif client.status == 'Reversed' %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 border border-orange-200">
+                                <i class="fas fa-undo mr-1.5"></i>
+                                {{ client.status }}
+                            </span>
+                            {% elif client.status == 'Closed' %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200">
+                                <i class="fas fa-times-circle mr-1.5"></i>
+                                {{ client.status }}
+                            </span>
+                            {% else %}
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gray-100 text-gray-800 border border-gray-200">
+                                {{ client.status or 'N/A' }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Mobile/Tablet List View -->
+    <div class="lg:hidden">
+        <div class="bg-white rounded-lg shadow-md border border-gray-200 divide-y divide-gray-200">
+            {% for client in clients_data %}
+            <div class="p-4 hover:bg-gray-50 transition-colors duration-200">
+                <!-- Header Row -->
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-base font-bold text-gray-900 truncate">{{ client.full_name or 'N/A' }}</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Account: {{ client.account_number or 'N/A' }}</p>
+                    </div>
+                    <div class="ml-2 flex-shrink-0">
+                        {% if client.status == 'Pending' %}
+                        <span class="px-2 py-1 inline-flex items-center text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
+                            <i class="fas fa-clock mr-1"></i>
+                            {{ client.status }}
+                        </span>
+                        {% elif client.status == 'Connected' %}
+                        <span class="px-2 py-1 inline-flex items-center text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            {{ client.status }}
+                        </span>
+                        {% elif client.status == 'Relocated' %}
+                        <span class="px-2 py-1 inline-flex items-center text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                            <i class="fas fa-map-marker-alt mr-1"></i>
+                            {{ client.status }}
+                        </span>
+                        {% elif client.status == 'Renewed' %}
+                        <span class="px-2 py-1 inline-flex items-center text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            <i class="fas fa-sync-alt mr-1"></i>
+                            {{ client.status }}
+                        </span>
+                        {% elif client.status == 'Reversed' %}
+                        <span class="px-2 py-1 inline-flex items-center text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                            <i class="fas fa-undo mr-1"></i>
+                            {{ client.status }}
+                        </span>
+                        {% elif client.status == 'Closed' %}
+                        <span class="px-2 py-1 inline-flex items-center text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                            <i class="fas fa-times-circle mr-1"></i>
+                            {{ client.status }}
+                        </span>
+                        {% else %}
+                        <span class="px-2 py-1 inline-flex items-center text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                            {{ client.status or 'N/A' }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Info List -->
+                <div class="space-y-2 mt-3">
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-layer-group w-4 mr-2 text-indigo-500"></i>
+                            <span>Category:</span>
+                        </div>
+                        <span class="px-2 py-0.5 inline-flex items-center rounded-full text-xs font-semibold
+                            {% if client.client_category == 'Virtual' %}bg-indigo-100 text-indigo-700 border border-indigo-200{% else %}bg-emerald-100 text-emerald-700 border border-emerald-200{% endif %}">
+                            {{ client.client_category or 'Actual' }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-box w-4 mr-2 text-green-500"></i>
+                            <span>Package:</span>
+                        </div>
+                        <span class="font-semibold text-gray-900">{{ client.package or 'N/A' }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm pt-2 pb-2 border-t border-gray-200 border-b border-gray-200 bg-purple-50/50 -mx-4 px-4">
+                        <div class="flex items-center text-gray-700 font-medium">
+                            <i class="fas fa-shopping-cart w-4 mr-2 text-purple-600"></i>
+                            <span>Sale Generated:</span>
+                        </div>
+                        <span class="font-bold text-purple-800 text-base">
+                            {% if client.package_price and client.package_price > 0 %}
+                                SHS {{ "%.2f"|format(client.package_price) }}
+                            {% else %}
+                                <span class="text-gray-400">SHS 0.00</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-server w-4 mr-2 text-blue-500"></i>
+                            <span>Assets:</span>
+                        </div>
+                        <span class="font-semibold text-gray-900">{{ client.asset_count or 0 }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-tools w-4 mr-2 text-blue-600"></i>
+                            <span>Technical Cost:</span>
+                        </div>
+                        <span class="font-semibold text-blue-700">
+                            {% if client.technical_cost and client.technical_cost > 0 %}
+                                SHS {{ "%.2f"|format(client.technical_cost) }}
+                            {% else %}
+                                <span class="text-gray-400">SHS 0.00</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-dollar-sign w-4 mr-2 text-green-600"></i>
+                            <span>Total Renewals:</span>
+                        </div>
+                        <span class="font-semibold text-green-700">
+                            {% if client.total_renewal_amount and client.total_renewal_amount > 0 %}
+                                SHS {{ "%.2f"|format(client.total_renewal_amount) }}
+                            {% else %}
+                                <span class="text-gray-400">SHS 0.00</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-calendar w-4 mr-2 text-gray-400"></i>
+                            <span>Payment:</span>
+                        </div>
+                        <span class="font-medium text-gray-900">
+                            {% if client.payment_date %}
+                                {{ client.payment_date.strftime('%b %d, %Y') }}
+                            {% else %}
+                                <span class="text-gray-400">N/A</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-clock w-4 mr-2 text-gray-400"></i>
+                            <span>Created:</span>
+                        </div>
+                        <span class="font-medium text-gray-900">
+                            {% if client.created_at %}
+                                {{ client.created_at.strftime('%b %d, %Y') }}
+                            {% else %}
+                                <span class="text-gray-400">N/A</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    {% if client.phone_number %}
+                    <div class="flex items-center justify-between text-sm pt-1 border-t border-gray-100">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-phone w-4 mr-2 text-gray-400"></i>
+                            <span>Phone:</span>
+                        </div>
+                        <span class="font-medium text-gray-900">{{ client.phone_number }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 sm:p-12 text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-4">
+            <i class="fas fa-inbox text-gray-400 text-3xl sm:text-4xl"></i>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">No Clients Found</h3>
+        <p class="text-sm sm:text-base text-gray-600 mb-6">There are currently no clients in the system.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterType = document.getElementById('filter_type');
+    const dayFilter = document.getElementById('day_filter');
+    const periodFilter = document.getElementById('period_filter');
+    const monthFilter = document.getElementById('month_filter');
+    
+    // Function to show/hide filter fields based on selection
+    function updateFilterFields() {
+        const selectedType = filterType.value;
+        
+        // Hide all filters first
+        dayFilter.classList.add('hidden');
+        periodFilter.classList.add('hidden');
+        monthFilter.classList.add('hidden');
+        
+        // Show the selected filter
+        if (selectedType === 'day') {
+            dayFilter.classList.remove('hidden');
+        } else if (selectedType === 'period') {
+            periodFilter.classList.remove('hidden');
+        } else if (selectedType === 'month') {
+            monthFilter.classList.remove('hidden');
+        }
+    }
+    
+    // Listen for filter type changes
+    filterType.addEventListener('change', updateFilterFields);
+    
+    // Initialize on page load
+    updateFilterFields();
+    
+    // Form validation
+    const filterForm = document.getElementById('filterForm');
+    filterForm.addEventListener('submit', function(e) {
+        const selectedType = filterType.value;
+        
+        if (selectedType === 'day') {
+            const dayDate = document.getElementById('day_date').value;
+            if (!dayDate) {
+                e.preventDefault();
+                alert('Please select a date for the day filter.');
+                return false;
+            }
+        } else if (selectedType === 'period') {
+            const startDate = document.getElementById('period_start_date').value;
+            const endDate = document.getElementById('period_end_date').value;
+            if (!startDate || !endDate) {
+                e.preventDefault();
+                alert('Please select both start and end dates for the period filter.');
+                return false;
+            }
+            if (startDate > endDate) {
+                e.preventDefault();
+                alert('Start date must be before or equal to end date.');
+                return false;
+            }
+        } else if (selectedType === 'month') {
+            const monthDate = document.getElementById('month_date').value;
+            if (!monthDate) {
+                e.preventDefault();
+                alert('Please select a month for the month filter.');
+                return false;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

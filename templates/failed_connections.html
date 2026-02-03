@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Failed Connections - RUSHTACH{% endblock %}
+
+{% block sidebar_content %}
+<!-- Failed Connections Page Sidebar - Customize based on role -->
+<ul class="space-y-2">
+    {% if actual_role == 'IT Support' and not switched_role %}
+    <!-- IT Support Sidebar Links -->
+    <li>
+        <a href="{{ url_for('connected_clients') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'connected_clients' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-check-circle w-5"></i>
+            <span>Connected Clients</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('failed_connections') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'failed_connections' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-times-circle w-5"></i>
+            <span>Failed Connections</span>
+        </a>
+    </li>
+    {% endif %}
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">Failed Connections</h1>
+                <p class="text-gray-600 mt-2 text-sm sm:text-base">Clients with failed or closed connection status</p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div class="bg-gradient-to-r from-red-100 to-rose-100 text-red-800 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm sm:text-base text-center sm:text-left border border-red-200 shadow-sm">
+                    <i class="fas fa-times-circle mr-2"></i>
+                    Total: {{ failed_clients|length }} Failed
+                </div>
+                <a href="{{ url_for('accounts') }}" 
+                   class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center text-sm sm:text-base shadow-md hover:shadow-lg">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Accounts
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Failed Connections Table -->
+    {% if failed_clients %}
+    <!-- Desktop Table View -->
+    <div class="hidden lg:block bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gradient-to-r from-red-50 to-rose-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-user-circle mr-2 text-red-600"></i>Account Info
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-box mr-2 text-red-600"></i>Package
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-calendar-alt mr-2 text-red-600"></i>Payment Date
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-clock mr-2 text-red-600"></i>Registered
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-tasks mr-2 text-red-600"></i>Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                    {% for client in failed_clients %}
+                    <tr class="hover:bg-red-50/50 transition-all duration-200 group">
+                        <td class="px-6 py-5">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Account:</span>
+                                    <span class="text-sm font-bold text-gray-900">{{ client.account_number }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-user text-gray-400 text-xs"></i>
+                                    <span class="text-sm font-semibold text-gray-800">{{ client.full_name }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-phone text-gray-400 text-xs"></i>
+                                    <span class="text-sm text-gray-600">{{ client.phone_number }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-gray-800">
+                                {{ client.package or 'N/A' }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm text-gray-700">
+                                {% if client.payment_date %}
+                                <div class="font-semibold">{{ client.payment_date.strftime('%b %d, %Y') }}</div>
+                                {% else %}
+                                <span class="text-gray-400">N/A</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm text-gray-700">
+                                {% if client.created_at %}
+                                <div class="font-semibold">{{ client.created_at.strftime('%b %d, %Y') }}</div>
+                                <div class="text-xs text-gray-500 mt-0.5">
+                                    {{ client.created_at.strftime('%I:%M %p') }}
+                                </div>
+                                {% else %}
+                                <span class="text-gray-400">N/A</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200">
+                                <i class="fas fa-times-circle mr-1.5"></i>
+                                {{ client.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Mobile/Tablet Card View -->
+    <div class="lg:hidden space-y-4">
+        {% for client in failed_clients %}
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-5 hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-900">{{ client.full_name }}</h3>
+                    <p class="text-sm text-gray-600 mt-1">Account: {{ client.account_number }}</p>
+                </div>
+                <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200 whitespace-nowrap">
+                    <i class="fas fa-times-circle mr-1.5"></i>
+                    {{ client.status }}
+                </span>
+            </div>
+            
+            <div class="space-y-3">
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Account Info</p>
+                    <div class="space-y-1.5">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-hashtag text-gray-400 text-xs"></i>
+                            <span class="text-sm font-semibold text-gray-800">{{ client.account_number }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-user text-gray-400 text-xs"></i>
+                            <span class="text-sm text-gray-700">{{ client.full_name }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-phone text-gray-400 text-xs"></i>
+                            <span class="text-sm text-gray-700">{{ client.phone_number }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Package</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            <i class="fas fa-box text-red-500 mr-1"></i>
+                            {{ client.package or 'N/A' }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Payment Date</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            {% if client.payment_date %}
+                            <i class="fas fa-calendar text-gray-400 mr-1"></i>
+                            {{ client.payment_date.strftime('%b %d, %Y') }}
+                            {% else %}
+                            <span class="text-gray-400">N/A</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Registered</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            {% if client.created_at %}
+                            <i class="fas fa-clock text-gray-400 mr-1"></i>
+                            {{ client.created_at.strftime('%b %d, %Y') }}
+                            <span class="text-xs text-gray-500 block mt-0.5">{{ client.created_at.strftime('%I:%M %p') }}</span>
+                            {% else %}
+                            <span class="text-gray-400">N/A</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 sm:p-12 text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-green-100 to-emerald-200 rounded-full mb-4">
+            <i class="fas fa-check-circle text-green-600 text-3xl sm:text-4xl"></i>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">No Failed Connections</h3>
+        <p class="text-sm sm:text-base text-gray-600 mb-6">There are currently no clients with failed connection status.</p>
+        <a href="{{ url_for('accounts') }}" 
+           class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base shadow-md hover:shadow-lg">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Accounts
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

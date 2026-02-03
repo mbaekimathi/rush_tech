@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Employee Sign Up - RUSHTACH{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto mt-8 mb-8">
+    <div class="bg-white rounded-xl shadow-2xl p-8">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
+                <i class="fas fa-user-plus text-green-600 text-3xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Employee Registration</h2>
+            <p class="text-gray-600">Create your account to access the Assets Management System</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('signup') }}" enctype="multipart/form-data" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Full Name -->
+                <div class="md:col-span-2">
+                    <label for="full_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user mr-2"></i>Full Name <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="full_name" 
+                        name="full_name" 
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="Enter your full name"
+                    >
+                </div>
+
+                <!-- Phone Number -->
+                <div>
+                    <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-phone mr-2"></i>Phone Number <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="tel" 
+                        id="phone_number" 
+                        name="phone_number" 
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="+1234567890"
+                    >
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-2"></i>Email Address <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="your.email@example.com"
+                    >
+                </div>
+
+                <!-- 6 Digit Verification Code -->
+                <div>
+                    <label for="verification_code" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-key mr-2"></i>6-Digit Verification Code <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="verification_code" 
+                        name="verification_code" 
+                        required
+                        maxlength="6"
+                        pattern="[0-9]{6}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="123456"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">Enter exactly 6 digits</p>
+                </div>
+
+                <!-- Profile Picture -->
+                <div>
+                    <label for="profile_picture" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-image mr-2"></i>Profile Picture <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <div class="flex items-center space-x-4">
+                        <input 
+                            type="file" 
+                            id="profile_picture" 
+                            name="profile_picture" 
+                            accept="image/png,image/jpeg,image/jpg,image/gif"
+                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        >
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Max 5MB. Allowed: PNG, JPG, JPEG, GIF</p>
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-2"></i>Password <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required
+                        minlength="6"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="Minimum 6 characters"
+                    >
+                </div>
+
+                <!-- Confirm Password -->
+                <div>
+                    <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-2"></i>Confirm Password <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="password" 
+                        id="confirm_password" 
+                        name="confirm_password" 
+                        required
+                        minlength="6"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="Re-enter your password"
+                    >
+                </div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                <p class="text-sm text-blue-800">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    <strong>Note:</strong> After registration, your account will be set to "Pending" status. 
+                    An administrator will review and approve your account. You will be notified once your account is activated.
+                </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                <button 
+                    type="submit" 
+                    class="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-semibold hover:from-green-700 hover:to-green-800 transition duration-200 shadow-lg hover:shadow-xl"
+                >
+                    <i class="fas fa-user-plus mr-2"></i>Create Account
+                </button>
+                <a 
+                    href="{{ url_for('login') }}" 
+                    class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition duration-200 text-center"
+                >
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Login
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Password confirmation validation
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    
+    if (password !== confirmPassword && confirmPassword.length > 0) {
+        this.setCustomValidity('Passwords do not match');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+
+// 6-digit code validation
+document.getElementById('verification_code').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+});
+</script>
+{% endblock %}

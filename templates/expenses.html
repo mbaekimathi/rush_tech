@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Register Expense - RUSHTACH{% endblock %}
+
+{% block sidebar_content %}
+<ul class="space-y-1">
+    <li>
+        <a href="/my-expenses" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {% if current_endpoint == 'my_expenses' %}bg-slate-100 text-slate-900{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}" title="My Expenses">
+            <i class="fas fa-user w-4 text-slate-400"></i>
+            <span>My Expenses</span>
+        </a>
+    </li>
+    {% if user_role not in ['Technician', 'Dispatcher', 'Employee'] %}
+    <li>
+        <a href="/view-all-expenses" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {% if current_endpoint == 'view_all_expenses' %}bg-slate-100 text-slate-900{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}" title="View All Expenses">
+            <i class="fas fa-list w-4 text-slate-400"></i>
+            <span>View All Expenses</span>
+        </a>
+    </li>
+    {% endif %}
+    <li>
+        <a href="/expenses" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {% if current_endpoint == 'expenses' %}bg-slate-100 text-slate-900{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}" title="Register Expense">
+            <i class="fas fa-plus w-4 text-slate-400"></i>
+            <span>Register Expense</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+    <!-- Page title -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-slate-900 tracking-tight">Register expense</h1>
+        <p class="mt-1 text-sm text-slate-500">Add a new expense to the system</p>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white border border-slate-200 rounded-lg">
+        <div class="px-5 py-4 border-b border-slate-200">
+            <h2 class="text-sm font-semibold text-slate-900">New expense</h2>
+        </div>
+        <form method="POST" action="{{ url_for('expenses') }}" class="p-5">
+            <div class="space-y-5">
+                <div>
+                    <label for="category" class="block text-xs font-medium text-slate-600 mb-1.5">Category <span class="text-red-600">*</span></label>
+                    <select id="category" name="category" required class="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        <option value="">Select category</option>
+                        <option value="EQUIPMENTS">EQUIPMENTS</option>
+                        <option value="FUEL">FUEL</option>
+                        <option value="SALARY">SALARY</option>
+                        <option value="TRANSPORT">TRANSPORT</option>
+                        <option value="OTHER">OTHER</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label for="name" class="block text-xs font-medium text-slate-600 mb-1.5">Name <span class="text-red-600">*</span></label>
+                        <input type="text" id="name" name="name" required placeholder="e.g. Office supplies" class="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm placeholder-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="amount" class="block text-xs font-medium text-slate-600 mb-1.5">Amount <span class="text-red-600">*</span></label>
+                        <input type="number" id="amount" name="amount" required min="0" step="0.01" placeholder="0.00" class="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm placeholder-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label for="details" class="block text-xs font-medium text-slate-600 mb-1.5">Details</label>
+                    <textarea id="details" name="details" rows="3" placeholder="Optional notes" class="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm placeholder-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"></textarea>
+                </div>
+            </div>
+            <div class="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                <a href="/view-all-expenses" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Save expense
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

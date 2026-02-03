@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Client Registration - RUSHTACH{% endblock %}
+
+{% block sidebar_content %}
+<!-- Client Registration Page Sidebar - Customize based on role -->
+<ul class="space-y-2">
+    <!-- Add your client registration-specific sidebar links here (role-based) -->
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8 mb-8">
+    <div class="bg-white rounded-xl shadow-2xl p-8">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-4">
+                <i class="fas fa-user-plus text-blue-600 text-3xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Client Registration</h2>
+            <p class="text-gray-600">Register a new client in the system</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('client_registration') }}" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Client's Full Name -->
+                <div class="md:col-span-2">
+                    <label for="full_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user mr-2"></i>Client's Full Name <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="full_name" 
+                        name="full_name" 
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="Enter client's full name"
+                    >
+                </div>
+
+                <!-- Phone Number -->
+                <div>
+                    <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-phone mr-2"></i>Phone Number <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="tel" 
+                        id="phone_number" 
+                        name="phone_number" 
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="+1234567890"
+                    >
+                    <!-- Phone Number Usage Indicator -->
+                    <div id="phone-usage-indicator" class="mt-2 hidden">
+                        <div id="phone-usage-message" class="text-sm p-2 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- Account Number -->
+                <div>
+                    <label for="account_number" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-hashtag mr-2"></i>Account Number <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="account_number" 
+                        name="account_number" 
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="Enter account number"
+                    >
+                </div>
+
+                <!-- Package -->
+                <div>
+                    <label for="package" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-box mr-2"></i>Package
+                    </label>
+                    <input 
+                        type="text" 
+                        id="package" 
+                        name="package" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="Enter package name"
+                    >
+                </div>
+
+                <!-- Work Order -->
+                <div>
+                    <label for="work_order" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-clipboard-list mr-2"></i>Work Order
+                    </label>
+                    <input 
+                        type="text" 
+                        id="work_order" 
+                        name="work_order" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="Enter work order (optional)"
+                    >
+                </div>
+
+                <!-- Payment Date -->
+                <div>
+                    <label for="payment_date" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar-alt mr-2"></i>Payment Date <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="date" 
+                        id="payment_date" 
+                        name="payment_date" 
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">Default is today's date</p>
+                </div>
+
+                <!-- Client Category -->
+                <div class="md:col-span-2">
+                    <label for="client_category" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-layer-group mr-2"></i>Client Category <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        id="client_category"
+                        name="client_category"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-white"
+                    >
+                        <option value="Actual" selected>Actual Client (Ground location only)</option>
+                        <option value="Virtual">Virtual Client (Virtual + Ground location)</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">This controls which location fields are required.</p>
+                </div>
+
+                <!-- Virtual Location -->
+                <div id="virtual-location-wrapper">
+                    <label for="virtual_location" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-globe mr-2"></i>Virtual Location
+                    </label>
+                    <input 
+                        type="text" 
+                        id="virtual_location" 
+                        name="virtual_location" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="Enter virtual location"
+                    >
+                </div>
+
+                <!-- Ground Location -->
+                <div id="ground-location-wrapper">
+                    <label for="ground_location" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-map-marker-alt mr-2"></i>Ground Location
+                    </label>
+                    <input 
+                        type="text" 
+                        id="ground_location" 
+                        name="ground_location" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="Enter ground/physical location"
+                    >
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                <button type="submit" 
+                        class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 flex items-center justify-center">
+                    <i class="fas fa-save mr-2"></i>
+                    Register Client
+                </button>
+                <button type="reset" 
+                        class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition duration-200 flex items-center justify-center">
+                    <i class="fas fa-redo mr-2"></i>
+                    Reset Form
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Set default payment date to today
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentDateInput = document.getElementById('payment_date');
+        if (paymentDateInput && !paymentDateInput.value) {
+            const today = new Date().toISOString().split('T')[0];
+            paymentDateInput.value = today;
+        }
+
+        // Client category logic (show/hide + required fields)
+        const categorySelect = document.getElementById('client_category');
+        const virtualWrapper = document.getElementById('virtual-location-wrapper');
+        const groundWrapper = document.getElementById('ground-location-wrapper');
+        const virtualInput = document.getElementById('virtual_location');
+        const groundInput = document.getElementById('ground_location');
+
+        function applyCategoryRules() {
+            const category = categorySelect ? categorySelect.value : 'Actual';
+
+            if (category === 'Actual') {
+                // Actual: ground required, virtual hidden/not required
+                if (virtualWrapper) virtualWrapper.classList.add('hidden');
+                if (virtualInput) {
+                    virtualInput.required = false;
+                    virtualInput.value = '';
+                }
+                if (groundWrapper) groundWrapper.classList.remove('hidden');
+                if (groundInput) groundInput.required = true;
+            } else {
+                // Virtual: both required and visible
+                if (virtualWrapper) virtualWrapper.classList.remove('hidden');
+                if (virtualInput) virtualInput.required = true;
+                if (groundWrapper) groundWrapper.classList.remove('hidden');
+                if (groundInput) groundInput.required = true;
+            }
+        }
+
+        if (categorySelect) {
+            categorySelect.addEventListener('change', applyCategoryRules);
+            applyCategoryRules();
+        }
+    });
+
+    // Phone number usage checker
+    let phoneCheckTimeout;
+    const phoneNumberInput = document.getElementById('phone_number');
+    const phoneUsageIndicator = document.getElementById('phone-usage-indicator');
+    const phoneUsageMessage = document.getElementById('phone-usage-message');
+
+    if (phoneNumberInput) {
+        phoneNumberInput.addEventListener('input', function() {
+            const phoneNumber = this.value.trim();
+            
+            // Clear previous timeout
+            clearTimeout(phoneCheckTimeout);
+            
+            // Hide indicator if empty
+            if (!phoneNumber) {
+                phoneUsageIndicator.classList.add('hidden');
+                return;
+            }
+            
+            // Debounce: Wait 500ms after user stops typing
+            phoneCheckTimeout = setTimeout(function() {
+                checkPhoneNumber(phoneNumber);
+            }, 500);
+        });
+
+        // Also check on blur (when user leaves the field)
+        phoneNumberInput.addEventListener('blur', function() {
+            const phoneNumber = this.value.trim();
+            if (phoneNumber) {
+                checkPhoneNumber(phoneNumber);
+            }
+        });
+    }
+
+    function checkPhoneNumber(phoneNumber) {
+        if (!phoneNumber) {
+            phoneUsageIndicator.classList.add('hidden');
+            return;
+        }
+
+        // Show loading state
+        phoneUsageIndicator.classList.remove('hidden');
+        phoneUsageMessage.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking phone number...';
+        phoneUsageMessage.className = 'text-sm p-2 rounded-lg bg-blue-50 text-blue-700 border border-blue-200';
+
+        // Make AJAX request to check phone number
+        fetch(`{{ url_for('check_phone_number') }}?phone_number=${encodeURIComponent(phoneNumber)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    phoneUsageMessage.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Error checking phone number';
+                    phoneUsageMessage.className = 'text-sm p-2 rounded-lg bg-red-50 text-red-700 border border-red-200';
+                    return;
+                }
+
+                if (data.used && data.count > 0) {
+                    // Phone number is already used
+                    const countText = data.count === 1 ? 'time' : 'times';
+                    phoneUsageMessage.innerHTML = `<i class="fas fa-info-circle mr-2"></i>This phone number has been used <strong>${data.count}</strong> ${countText} before. You can still register.`;
+                    phoneUsageMessage.className = 'text-sm p-2 rounded-lg bg-yellow-50 text-yellow-800 border border-yellow-300';
+                } else {
+                    // Phone number is new
+                    phoneUsageMessage.innerHTML = '<i class="fas fa-check-circle mr-2"></i>This phone number is new';
+                    phoneUsageMessage.className = 'text-sm p-2 rounded-lg bg-green-50 text-green-700 border border-green-200';
+                }
+            })
+            .catch(error => {
+                console.error('Error checking phone number:', error);
+                phoneUsageMessage.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Error checking phone number';
+                phoneUsageMessage.className = 'text-sm p-2 rounded-lg bg-red-50 text-red-700 border border-red-200';
+            });
+    }
+</script>
+{% endblock %}

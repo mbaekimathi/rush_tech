@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Client - RUSHTACH{% endblock %}
+
+{% block sidebar_content %}
+<ul class="space-y-2">
+    <li>
+        <a href="{{ url_for('all_clients') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'all_clients' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-users w-5"></i>
+            <span>All Clients</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8 mb-8">
+    <div class="bg-white rounded-xl shadow-2xl p-8">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Edit Client</h2>
+                <p class="text-gray-600 mt-1">Update client details</p>
+            </div>
+            <a href="{{ url_for('all_clients') }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium">
+                <i class="fas fa-arrow-left mr-2"></i>Back to All Clients
+            </a>
+        </div>
+
+        <form method="POST" action="{{ url_for('edit_client', client_id=client.id) }}" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label for="full_name" class="block text-sm font-medium text-gray-700 mb-2">Full Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="full_name" name="full_name" required
+                        value="{{ client.full_name or '' }}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Client's full name">
+                </div>
+                <div>
+                    <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-2">Phone Number <span class="text-red-500">*</span></label>
+                    <input type="tel" id="phone_number" name="phone_number" required
+                        value="{{ client.phone_number or '' }}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="+1234567890">
+                </div>
+                <div>
+                    <label for="account_number" class="block text-sm font-medium text-gray-700 mb-2">Account Number <span class="text-red-500">*</span></label>
+                    <input type="text" id="account_number" name="account_number" required
+                        value="{{ client.account_number or '' }}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Account number">
+                </div>
+                <div>
+                    <label for="package" class="block text-sm font-medium text-gray-700 mb-2">Package</label>
+                    <input type="text" id="package" name="package"
+                        value="{{ client.package or '' }}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Package name">
+                </div>
+                <div>
+                    <label for="work_order" class="block text-sm font-medium text-gray-700 mb-2">Work Order</label>
+                    <input type="text" id="work_order" name="work_order"
+                        value="{{ client.work_order or '' }}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Work order (optional)">
+                </div>
+                <div>
+                    <label for="payment_date" class="block text-sm font-medium text-gray-700 mb-2">Payment Date <span class="text-red-500">*</span></label>
+                    <input type="date" id="payment_date" name="payment_date" required
+                        value="{% if client.payment_date %}{{ client.payment_date.strftime('%Y-%m-%d') if client.payment_date is not string else client.payment_date }}{% endif %}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select id="status" name="status" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                        <option value="Pending" {{ 'selected' if client.status == 'Pending' else '' }}>Pending</option>
+                        <option value="Connected" {{ 'selected' if client.status == 'Connected' else '' }}>Connected</option>
+                        <option value="Relocated" {{ 'selected' if client.status == 'Relocated' else '' }}>Relocated</option>
+                        <option value="Renewed" {{ 'selected' if client.status == 'Renewed' else '' }}>Renewed</option>
+                        <option value="Reversed" {{ 'selected' if client.status == 'Reversed' else '' }}>Reversed</option>
+                        <option value="Closed" {{ 'selected' if client.status == 'Closed' else '' }}>Closed</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="client_category" class="block text-sm font-medium text-gray-700 mb-2">Client Category <span class="text-red-500">*</span></label>
+                    <select id="client_category" name="client_category" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                        <option value="Actual" {{ 'selected' if client.client_category == 'Actual' else '' }}>Actual (Ground location only)</option>
+                        <option value="Virtual" {{ 'selected' if client.client_category == 'Virtual' else '' }}>Virtual (Virtual + Ground location)</option>
+                    </select>
+                </div>
+                <div id="virtual-location-wrapper" class="md:col-span-2" style="{% if client.client_category != 'Virtual' %}display:none;{% endif %}">
+                    <label for="virtual_location" class="block text-sm font-medium text-gray-700 mb-2">Virtual Location</label>
+                    <input type="text" id="virtual_location" name="virtual_location"
+                        value="{{ client.virtual_location or '' }}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Virtual location">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="ground_location" class="block text-sm font-medium text-gray-700 mb-2">Ground Location</label>
+                    <input type="text" id="ground_location" name="ground_location"
+                        value="{{ client.ground_location or '' }}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ground/physical location">
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                <button type="submit" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 flex items-center justify-center">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+                <a href="{{ url_for('all_clients') }}" class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition duration-200 flex items-center justify-center text-center">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var cat = document.getElementById('client_category');
+    var virtualWrap = document.getElementById('virtual-location-wrapper');
+    if (cat) {
+        cat.addEventListener('change', function() {
+            virtualWrap.style.display = this.value === 'Virtual' ? 'block' : 'none';
+        });
+    }
+});
+</script>
+{% endblock %}
+

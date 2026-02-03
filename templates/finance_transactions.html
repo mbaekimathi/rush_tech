@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block title %}Finance Transactions - RUSHTACH{% endblock %}
+
+{% block sidebar_content %}
+<!-- Finance Transactions Page Sidebar -->
+<ul class="space-y-2">
+    <li>
+        <a href="{{ url_for('finance') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'finance' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-dollar-sign w-5"></i>
+            <span>Finance Overview</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('finance_transactions') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition duration-200 {% if current_endpoint == 'finance_transactions' %}bg-purple-50 text-purple-600 font-semibold{% endif %}">
+            <i class="fas fa-chart-line w-5"></i>
+            <span>Finance Transactions</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('closed_assets') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition duration-200 {% if current_endpoint == 'closed_assets' %}bg-red-50 text-red-600 font-semibold{% endif %}">
+            <i class="fas fa-boxes w-5"></i>
+            <span>Closed Assets</span>
+        </a>
+    </li>
+    <li class="pt-2 border-t border-gray-200">
+        <p class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Finance Accounts</p>
+    </li>
+    <li>
+        <a href="{{ url_for('dispatcher_connected_accounts') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-50 text-gray-700 hover:text-green-600 transition duration-200 {% if current_endpoint == 'dispatcher_connected_accounts' %}bg-green-50 text-green-600 font-semibold{% endif %}">
+            <i class="fas fa-check-circle w-5"></i>
+            <span>Connected Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('relocated_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'relocated_routers' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-map-marker-alt w-5"></i>
+            <span>Relocated Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('renewed_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-50 text-gray-700 hover:text-green-600 transition duration-200 {% if current_endpoint == 'renewed_routers' %}bg-green-50 text-green-600 font-semibold{% endif %}">
+            <i class="fas fa-sync-alt w-5"></i>
+            <span>Renewed Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('reversed_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition duration-200 {% if current_endpoint == 'reversed_routers' %}bg-orange-50 text-orange-600 font-semibold{% endif %}">
+            <i class="fas fa-undo w-5"></i>
+            <span>Reversed Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('closed_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition duration-200 {% if current_endpoint == 'closed_routers' %}bg-red-50 text-red-600 font-semibold{% endif %}">
+            <i class="fas fa-times-circle w-5"></i>
+            <span>Closed Accounts</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Finance Transactions</h1>
+                <p class="text-gray-600 mt-2 text-sm sm:text-base">Daily summary of accounts created and assets closed</p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div class="bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm sm:text-base text-center sm:text-left border border-purple-200 shadow-sm">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    Total Days: {{ transactions_data|length }}
+                </div>
+                {% if filter_type and filter_type != 'all' %}
+                <div class="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm sm:text-base text-center sm:text-left border border-green-200 shadow-sm">
+                    <i class="fas fa-filter mr-2"></i>
+                    Filter: 
+                    {% if filter_type == 'day' %}Day - {{ selected_date }}
+                    {% elif filter_type == 'period' %}Period - {{ start_date }} to {{ end_date }}
+                    {% elif filter_type == 'month' %}Month - {{ selected_month }}
+                    {% endif %}
+                </div>
+                {% endif %}
+                <a href="{{ url_for('finance') }}" 
+                   class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center text-sm sm:text-base shadow-md hover:shadow-lg">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Finance
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="mb-8 bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <i class="fas fa-filter mr-2 text-purple-600"></i>
+            Filter Transactions
+        </h2>
+        
+        <form method="GET" action="{{ url_for('finance_transactions') }}" id="filterForm" class="space-y-4">
+            <!-- Filter Type Selection -->
+            <div class="flex flex-wrap gap-4 mb-4">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="filter_type" value="all" class="w-4 h-4 text-purple-600" 
+                           {% if filter_type == 'all' or not filter_type %}checked{% endif %} onchange="updateFilterUI()">
+                    <span class="text-sm font-medium text-gray-700">All Summary</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="filter_type" value="day" class="w-4 h-4 text-purple-600" 
+                           {% if filter_type == 'day' %}checked{% endif %} onchange="updateFilterUI()">
+                    <span class="text-sm font-medium text-gray-700">By Day</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="filter_type" value="period" class="w-4 h-4 text-purple-600" 
+                           {% if filter_type == 'period' %}checked{% endif %} onchange="updateFilterUI()">
+                    <span class="text-sm font-medium text-gray-700">By Period</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="filter_type" value="month" class="w-4 h-4 text-purple-600" 
+                           {% if filter_type == 'month' %}checked{% endif %} onchange="updateFilterUI()">
+                    <span class="text-sm font-medium text-gray-700">By Month</span>
+                </label>
+            </div>
+
+            <!-- Day Filter -->
+            <div id="dayFilter" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-calendar-day mr-2"></i>Select Date
+                </label>
+                <input type="date" name="selected_date" value="{{ selected_date }}" 
+                       class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+            </div>
+
+            <!-- Period Filter -->
+            <div id="periodFilter" class="hidden">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-calendar-check mr-2"></i>Start Date
+                        </label>
+                        <input type="date" name="start_date" value="{{ start_date }}" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-calendar-times mr-2"></i>End Date
+                        </label>
+                        <input type="date" name="end_date" value="{{ end_date }}" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Month Filter -->
+            <div id="monthFilter" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-calendar-alt mr-2"></i>Select Month
+                </label>
+                <input type="month" name="selected_month" value="{{ selected_month }}" 
+                       class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="flex flex-wrap gap-3 pt-2">
+                <button type="submit" 
+                        class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center">
+                    <i class="fas fa-search mr-2"></i>
+                    Apply Filter
+                </button>
+                <a href="{{ url_for('finance_transactions') }}" 
+                   class="bg-gray-200 text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-200 flex items-center">
+                    <i class="fas fa-redo mr-2"></i>
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Transactions Table -->
+    {% if transactions_data %}
+    <!-- Desktop Table View -->
+    <div class="hidden lg:block bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gradient-to-r from-purple-50 to-indigo-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-calendar-alt mr-2 text-purple-600"></i>Date
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-users mr-2 text-purple-600"></i>Accounts Created
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-money-bill-wave mr-2 text-purple-600"></i>Total Amount Used
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-server mr-2 text-purple-600"></i>Assets Closed
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-money-bill-wave mr-2 text-purple-600"></i>Closed Assets Purchase Price
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                    {% for transaction in transactions_data %}
+                    <tr class="hover:bg-purple-50/50 transition-all duration-200 group">
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-gray-900">
+                                {% if transaction.transaction_date %}
+                                {{ transaction.transaction_date.strftime('%b %d, %Y') }}
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <span class="px-3 py-1.5 inline-flex items-center text-sm font-semibold rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                                    <i class="fas fa-users mr-2"></i>
+                                    {{ transaction.accounts_created or 0 }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-green-700">
+                                {% if transaction.total_amount_used and transaction.total_amount_used > 0 %}
+                                    SHS {{ "%.2f"|format(transaction.total_amount_used) }}
+                                {% else %}
+                                    <span class="text-gray-400">SHS 0.00</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <span class="px-3 py-1.5 inline-flex items-center text-sm font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
+                                    <i class="fas fa-server mr-2"></i>
+                                    {{ transaction.assets_closed or 0 }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-gray-900">
+                                {% if transaction.closed_assets_purchase_price and transaction.closed_assets_purchase_price > 0 %}
+                                    <span class="text-green-600">SHS {{ "%.2f"|format(transaction.closed_assets_purchase_price) }}</span>
+                                {% else %}
+                                    <span class="text-gray-400">SHS 0.00</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Mobile/Tablet List View -->
+    <div class="lg:hidden">
+        <div class="bg-white rounded-lg shadow-md border border-gray-200 divide-y divide-gray-200">
+            {% for transaction in transactions_data %}
+            <div class="p-4 hover:bg-gray-50 transition-colors duration-200">
+                <!-- Header Row -->
+                <div class="mb-3 pb-2 border-b border-gray-200">
+                    <h3 class="text-base font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-calendar-alt mr-2 text-purple-600"></i>
+                        {% if transaction.transaction_date %}
+                        {{ transaction.transaction_date.strftime('%b %d, %Y') }}
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </h3>
+                </div>
+                
+                <!-- Info List -->
+                <div class="space-y-2.5 mt-3">
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-users w-4 mr-2 text-blue-500"></i>
+                            <span>Accounts Created:</span>
+                        </div>
+                        <span class="px-2 py-1 font-semibold text-blue-700 bg-blue-50 rounded">{{ transaction.accounts_created or 0 }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-server w-4 mr-2 text-red-500"></i>
+                            <span>Assets Closed:</span>
+                        </div>
+                        <span class="px-2 py-1 font-semibold text-red-700 bg-red-50 rounded">{{ transaction.assets_closed or 0 }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm pt-1 border-t border-gray-100">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-money-bill-wave w-4 mr-2 text-green-600"></i>
+                            <span>Total Amount Used:</span>
+                        </div>
+                        <span class="font-semibold text-green-700">
+                            {% if transaction.total_amount_used and transaction.total_amount_used > 0 %}
+                                SHS {{ "%.2f"|format(transaction.total_amount_used) }}
+                            {% else %}
+                                <span class="text-gray-400">SHS 0.00</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-dollar-sign w-4 mr-2 text-green-600"></i>
+                            <span>Purchase Price:</span>
+                        </div>
+                        <span class="font-semibold text-green-700">
+                            {% if transaction.closed_assets_purchase_price and transaction.closed_assets_purchase_price > 0 %}
+                                SHS {{ "%.2f"|format(transaction.closed_assets_purchase_price) }}
+                            {% else %}
+                                <span class="text-gray-400">SHS 0.00</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 sm:p-12 text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-4">
+            <i class="fas fa-inbox text-gray-400 text-3xl sm:text-4xl"></i>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">No Transactions Found</h3>
+        <p class="text-sm sm:text-base text-gray-600 mb-6">There are currently no transactions in the system.</p>
+        <a href="{{ url_for('finance') }}" 
+           class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base shadow-md hover:shadow-lg">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Finance
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function updateFilterUI() {
+        const filterType = document.querySelector('input[name="filter_type"]:checked').value;
+        
+        // Hide all filter inputs
+        document.getElementById('dayFilter').classList.add('hidden');
+        document.getElementById('periodFilter').classList.add('hidden');
+        document.getElementById('monthFilter').classList.add('hidden');
+        
+        // Show relevant filter input
+        if (filterType === 'day') {
+            document.getElementById('dayFilter').classList.remove('hidden');
+        } else if (filterType === 'period') {
+            document.getElementById('periodFilter').classList.remove('hidden');
+        } else if (filterType === 'month') {
+            document.getElementById('monthFilter').classList.remove('hidden');
+        }
+    }
+    
+    // Initialize filter UI on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateFilterUI();
+    });
+</script>
+{% endblock %}

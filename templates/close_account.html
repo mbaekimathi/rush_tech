@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Close Account - RUSHTACH{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Close Account</h1>
+                <p class="text-gray-600 mt-1">Permanently close client account</p>
+            </div>
+            <a href="{{ url_for('dispatcher_connected_accounts') }}" 
+               class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition duration-200 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Connected Accounts
+            </a>
+        </div>
+    </div>
+
+    <!-- Client Information Card -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Client Information</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <p class="text-sm text-gray-600">Account Number</p>
+                <p class="text-lg font-semibold text-gray-900">{{ client.account_number }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Client Name</p>
+                <p class="text-lg font-semibold text-gray-900">{{ client.full_name }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Phone Number</p>
+                <p class="text-lg text-gray-900">{{ client.phone_number }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Package</p>
+                <p class="text-lg text-gray-900">{{ client.package or 'N/A' }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Current Status</p>
+                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    {{ client.status }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Closure Form -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700">
+                        <strong>Warning:</strong> Closing an account is a permanent action. The client status will be changed to "Closed" 
+                        and this action cannot be easily undone. Please ensure you have proper authorization.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Closure Details</h2>
+        <form method="POST" action="{{ url_for('close_account', client_id=client.id) }}">
+            <div class="space-y-6">
+                <!-- Asset Sale Information -->
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-box mr-2"></i>Asset Sale Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Purchase Price -->
+                        <div>
+                            <label for="purchase_price" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-money-bill-wave mr-2"></i>Purchase Price (SHS) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number"
+                                   id="purchase_price"
+                                   name="purchase_price"
+                                   step="0.01"
+                                   min="0"
+                                   required
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                                   placeholder="0.00">
+                            <p class="text-xs text-gray-500 mt-1">Enter the price at which the asset was sold</p>
+                        </div>
+
+                        <!-- Buyer Name -->
+                        <div>
+                            <label for="buyer_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-user mr-2"></i>Buyer Name <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text"
+                                   id="buyer_name"
+                                   name="buyer_name"
+                                   required
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                                   placeholder="Enter buyer's full name">
+                            <p class="text-xs text-gray-500 mt-1">Enter the name of the person/company who purchased the asset</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex items-center justify-end space-x-4 pt-4">
+                    <a href="{{ url_for('dispatcher_connected_accounts') }}" 
+                       class="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition duration-200">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition duration-200">
+                        <i class="fas fa-times-circle mr-2"></i>
+                        Close Account
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

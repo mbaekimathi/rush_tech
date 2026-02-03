@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+
+{% block title %}Notification Settings - {{ company_name }}{% endblock %}
+
+{% block sidebar_content %}
+<!-- Settings Page Sidebar -->
+<ul class="space-y-2">
+    <li>
+        <a href="{{ url_for('company_profile_settings') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'company_profile_settings' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-building w-5"></i>
+            <span>Company Profile Settings</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('notification_settings') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-50 text-gray-700 hover:text-green-600 transition duration-200 {% if current_endpoint == 'notification_settings' %}bg-green-50 text-green-600 font-semibold{% endif %}">
+            <i class="fas fa-bell w-5"></i>
+            <span>Notification Settings</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('reminder_settings') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-yellow-50 text-gray-700 hover:text-yellow-600 transition duration-200 {% if current_endpoint == 'reminder_settings' %}bg-yellow-50 text-yellow-600 font-semibold{% endif %}">
+            <i class="fas fa-clock w-5"></i>
+            <span>Reminder Settings</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('finance_settings') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition duration-200 {% if current_endpoint == 'finance_settings' %}bg-purple-50 text-purple-600 font-semibold{% endif %}">
+            <i class="fas fa-dollar-sign w-5"></i>
+            <span>Finance Settings</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Notification Settings</h1>
+        <p class="text-gray-600 mt-1">Configure your notification preferences and alerts</p>
+    </div>
+    
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <form method="POST" action="{{ url_for('notification_settings') }}" id="notification-form">
+            <div class="space-y-6">
+                <!-- Sound Settings Section -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Sound Settings</h3>
+                    
+                    <!-- Enable/Disable Sound -->
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
+                        <div>
+                            <label for="sound_enabled" class="text-sm font-medium text-gray-700">
+                                Enable Notification Sounds
+                            </label>
+                            <p class="text-xs text-gray-500 mt-1">Play sounds for system notifications</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" 
+                                   id="sound_enabled" 
+                                   name="sound_enabled"
+                                   {% if not notification_data or notification_data.sound_enabled %}checked{% endif %}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                        </label>
+                    </div>
+                    
+                    <!-- Notification Sound Selection -->
+                    <div class="mb-4">
+                        <label for="notification_sound" class="block text-sm font-medium text-gray-700 mb-2">
+                            Notification Sound
+                        </label>
+                        <div class="flex items-center gap-4">
+                            <select id="notification_sound" 
+                                    name="notification_sound" 
+                                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition">
+                                <option value="default" {% if not notification_data or notification_data.notification_sound == 'default' %}selected{% endif %}>Default</option>
+                                <option value="chime" {% if notification_data and notification_data.notification_sound == 'chime' %}selected{% endif %}>Chime</option>
+                                <option value="ding" {% if notification_data and notification_data.notification_sound == 'ding' %}selected{% endif %}>Ding</option>
+                                <option value="pop" {% if notification_data and notification_data.notification_sound == 'pop' %}selected{% endif %}>Pop</option>
+                                <option value="bell" {% if notification_data and notification_data.notification_sound == 'bell' %}selected{% endif %}>Bell</option>
+                                <option value="alert" {% if notification_data and notification_data.notification_sound == 'alert' %}selected{% endif %}>Alert</option>
+                                <option value="success" {% if notification_data and notification_data.notification_sound == 'success' %}selected{% endif %}>Success</option>
+                                <option value="warning" {% if notification_data and notification_data.notification_sound == 'warning' %}selected{% endif %}>Warning</option>
+                            </select>
+                            <button type="button" 
+                                    id="test-sound-btn"
+                                    class="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition duration-200 flex items-center space-x-2">
+                                <i class="fas fa-volume-up"></i>
+                                <span>Test</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Volume Control -->
+                    <div>
+                        <label for="volume" class="block text-sm font-medium text-gray-700 mb-2">
+                            Volume: <span id="volume-value">{{ notification_data.volume if notification_data else 50 }}</span>%
+                        </label>
+                        <div class="flex items-center space-x-4">
+                            <i class="fas fa-volume-mute text-gray-400"></i>
+                            <input type="range" 
+                                   id="volume" 
+                                   name="volume" 
+                                   min="0" 
+                                   max="100" 
+                                   value="{{ notification_data.volume if notification_data else 50 }}"
+                                   class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+                            <i class="fas fa-volume-up text-gray-400"></i>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>0%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Email Notifications Section -->
+                <div class="space-y-4 pt-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Email Notifications</h3>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <label for="email_new_client" class="text-sm font-medium text-gray-700">
+                                New Client Registration
+                            </label>
+                            <p class="text-xs text-gray-500 mt-1">Receive email when a new client is registered</p>
+                        </div>
+                        <input type="checkbox" 
+                               id="email_new_client" 
+                               name="email_new_client" 
+                               {% if not notification_data or notification_data.email_new_client %}checked{% endif %}
+                               class="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500">
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <label for="email_payment" class="text-sm font-medium text-gray-700">
+                                Payment Notifications
+                            </label>
+                            <p class="text-xs text-gray-500 mt-1">Receive email for payment updates</p>
+                        </div>
+                        <input type="checkbox" 
+                               id="email_payment" 
+                               name="email_payment" 
+                               {% if not notification_data or notification_data.email_payment %}checked{% endif %}
+                               class="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500">
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <label for="email_status_change" class="text-sm font-medium text-gray-700">
+                                Status Change Alerts
+                            </label>
+                            <p class="text-xs text-gray-500 mt-1">Receive email when client status changes</p>
+                        </div>
+                        <input type="checkbox" 
+                               id="email_status_change" 
+                               name="email_status_change" 
+                               {% if not notification_data or notification_data.email_status_change %}checked{% endif %}
+                               class="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+                
+                <!-- System Notifications Section -->
+                <div class="space-y-4 pt-4 border-t border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">System Notifications</h3>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <label for="system_alerts" class="text-sm font-medium text-gray-700">
+                                System Alerts
+                            </label>
+                            <p class="text-xs text-gray-500 mt-1">Show system alerts and warnings</p>
+                        </div>
+                        <input type="checkbox" 
+                               id="system_alerts" 
+                               name="system_alerts" 
+                               {% if not notification_data or notification_data.system_alerts %}checked{% endif %}
+                               class="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500">
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <label for="browser_notifications" class="text-sm font-medium text-gray-700">
+                                Browser Notifications
+                            </label>
+                            <p class="text-xs text-gray-500 mt-1">Enable browser push notifications</p>
+                        </div>
+                        <input type="checkbox" 
+                               id="browser_notifications" 
+                               name="browser_notifications" 
+                               {% if not notification_data or notification_data.browser_notifications %}checked{% endif %}
+                               class="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+                
+                <!-- Client Notification Timing Section -->
+                <div class="space-y-4 pt-4 border-t border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Client Notification Timing</h3>
+                    <p class="text-sm text-gray-600 mb-4">Set the number of days after client registration when notifications should appear. Clients will appear in the notifications page once they reach the specified number of days from their registration date.</p>
+                    
+                    <!-- Relocation Notification -->
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <label for="relocation_days" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-truck-moving text-blue-600 mr-2"></i>
+                            Relocation Notification (Days)
+                        </label>
+                        <p class="text-xs text-gray-500 mb-3">Notify when a client has been registered for this many days (for relocation consideration)</p>
+                        <div class="flex items-center space-x-4">
+                            <input type="number" 
+                                   id="relocation_days" 
+                                   name="relocation_days" 
+                                   min="0" 
+                                   max="365" 
+                                   value="{{ notification_data.relocation_days if notification_data and notification_data.relocation_days is not none else 30 }}"
+                                   class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition">
+                            <span class="text-sm text-gray-600">days after registration</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Renewal Notification -->
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <label for="renewal_days" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-sync-alt text-yellow-600 mr-2"></i>
+                            Renewal Notification (Days)
+                        </label>
+                        <p class="text-xs text-gray-500 mb-3">Notify when a client has been registered for this many days (for renewal consideration)</p>
+                        <div class="flex items-center space-x-4">
+                            <input type="number" 
+                                   id="renewal_days" 
+                                   name="renewal_days" 
+                                   min="0" 
+                                   max="365" 
+                                   value="{{ notification_data.renewal_days if notification_data and notification_data.renewal_days is not none else 30 }}"
+                                   class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition">
+                            <span class="text-sm text-gray-600">days after registration</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Closing Notification -->
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <label for="closing_days" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-times-circle text-red-600 mr-2"></i>
+                            Closing Notification (Days)
+                        </label>
+                        <p class="text-xs text-gray-500 mb-3">Notify when a client has been registered for this many days (for closing consideration)</p>
+                        <div class="flex items-center space-x-4">
+                            <input type="number" 
+                                   id="closing_days" 
+                                   name="closing_days" 
+                                   min="0" 
+                                   max="365" 
+                                   value="{{ notification_data.closing_days if notification_data and notification_data.closing_days is not none else 30 }}"
+                                   class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition">
+                            <span class="text-sm text-gray-600">days after registration</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-end space-x-4 pt-4">
+                    <button type="button" 
+                            class="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition duration-200">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition duration-200">
+                        <i class="fas fa-save mr-2"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Hidden audio element for testing sounds -->
+<audio id="test-audio" preload="auto"></audio>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Update volume display
+    const volumeSlider = document.getElementById('volume');
+    const volumeValue = document.getElementById('volume-value');
+    
+    if (volumeSlider && volumeValue) {
+        volumeSlider.addEventListener('input', function() {
+            volumeValue.textContent = this.value;
+        });
+    }
+    
+    // Test sound functionality
+    const testSoundBtn = document.getElementById('test-sound-btn');
+    const soundSelect = document.getElementById('notification_sound');
+    const soundEnabled = document.getElementById('sound_enabled');
+    const testAudio = document.getElementById('test-audio');
+    
+    // Sound file mappings
+    const soundFiles = {
+        'default': 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2NQk',
+        'chime': 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2NQk',
+        'ding': 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2NQk',
+        'pop': 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2NQk',
+        'bell': 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2NQk',
+        'alert': 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2NQk',
+        'success': 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2NQk',
+        'warning': 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2NQk'
+    };
+    
+    // Global audio context (created once)
+    let audioContext = null;
+    
+    // Initialize audio context
+    function initAudioContext() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        return audioContext;
+    }
+    
+    // Generate simple notification sounds using Web Audio API
+    async function playNotificationSound(soundType, volume) {
+        if (!soundEnabled || !soundEnabled.checked) {
+            alert('Please enable notification sounds first');
+            return;
+        }
+        
+        try {
+            const ctx = initAudioContext();
+            
+            // Resume audio context if suspended (required by browsers)
+            if (ctx.state === 'suspended') {
+                await ctx.resume();
+            }
+            
+            // Sound configurations
+            const soundConfigs = {
+                'default': { freq: 800, duration: 0.2, type: 'sine' },
+                'chime': { freq: 600, duration: 0.3, type: 'sine', freq2: 800 },
+                'ding': { freq: 1000, duration: 0.15, type: 'sine' },
+                'pop': { freq: 400, duration: 0.1, type: 'square' },
+                'bell': { freq: 500, duration: 0.4, type: 'sine', freq2: 600 },
+                'alert': { freq: 1200, duration: 0.3, type: 'sawtooth' },
+                'success': { freq: 700, duration: 0.25, type: 'sine', freq2: 900 },
+                'warning': { freq: 900, duration: 0.2, type: 'triangle' }
+            };
+            
+            const config = soundConfigs[soundType] || soundConfigs['default'];
+            const gainNode = ctx.createGain();
+            const oscillator = ctx.createOscillator();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            oscillator.frequency.value = config.freq;
+            oscillator.type = config.type;
+            
+            // Set volume with fade in/out
+            const now = ctx.currentTime;
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(volume / 100, now + 0.01);
+            gainNode.gain.linearRampToValueAtTime(0, now + config.duration);
+            
+            // For chime and bell, add second tone
+            if (config.freq2) {
+                const oscillator2 = ctx.createOscillator();
+                const gainNode2 = ctx.createGain();
+                
+                oscillator2.connect(gainNode2);
+                gainNode2.connect(ctx.destination);
+                
+                oscillator2.frequency.value = config.freq2;
+                oscillator2.type = config.type;
+                
+                gainNode2.gain.setValueAtTime(0, now);
+                gainNode2.gain.linearRampToValueAtTime((volume / 100) * 0.7, now + 0.05);
+                gainNode2.gain.linearRampToValueAtTime(0, now + config.duration);
+                
+                oscillator2.start(now);
+                oscillator2.stop(now + config.duration);
+            }
+            
+            oscillator.start(now);
+            oscillator.stop(now + config.duration);
+            
+        } catch (error) {
+            console.error('Error playing sound:', error);
+            alert('Error playing sound. Please check your browser audio settings.');
+        }
+    }
+    
+    if (testSoundBtn && soundSelect && soundEnabled && volumeSlider) {
+        testSoundBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            const selectedSound = soundSelect.value;
+            const currentVolume = parseInt(volumeSlider.value) || 50;
+            
+            // Visual feedback
+            const originalHTML = testSoundBtn.innerHTML;
+            testSoundBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Playing...</span>';
+            testSoundBtn.disabled = true;
+            
+            try {
+                // Play the sound
+                await playNotificationSound(selectedSound, currentVolume);
+                
+                setTimeout(() => {
+                    testSoundBtn.innerHTML = originalHTML;
+                    testSoundBtn.disabled = false;
+                }, 500);
+            } catch (error) {
+                testSoundBtn.innerHTML = originalHTML;
+                testSoundBtn.disabled = false;
+            }
+        });
+    }
+    
+    // Style the range slider
+    const style = document.createElement('style');
+    style.textContent = `
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #16a34a;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #16a34a;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

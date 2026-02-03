@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+
+{% block title %}Closed Assets - RUSHTACH{% endblock %}
+
+{% block sidebar_content %}
+<!-- Closed Assets Page Sidebar -->
+<ul class="space-y-2">
+    <li>
+        <a href="{{ url_for('finance') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'finance' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-dollar-sign w-5"></i>
+            <span>Finance Overview</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('finance_transactions') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition duration-200 {% if current_endpoint == 'finance_transactions' %}bg-purple-50 text-purple-600 font-semibold{% endif %}">
+            <i class="fas fa-chart-line w-5"></i>
+            <span>Finance Transactions</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('closed_assets') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition duration-200 {% if current_endpoint == 'closed_assets' %}bg-red-50 text-red-600 font-semibold{% endif %}">
+            <i class="fas fa-boxes w-5"></i>
+            <span>Closed Assets</span>
+        </a>
+    </li>
+    <li class="pt-2 border-t border-gray-200">
+        <p class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Finance Accounts</p>
+    </li>
+    <li>
+        <a href="{{ url_for('dispatcher_connected_accounts') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-50 text-gray-700 hover:text-green-600 transition duration-200 {% if current_endpoint == 'dispatcher_connected_accounts' %}bg-green-50 text-green-600 font-semibold{% endif %}">
+            <i class="fas fa-check-circle w-5"></i>
+            <span>Connected Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('relocated_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'relocated_routers' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-map-marker-alt w-5"></i>
+            <span>Relocated Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('renewed_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-50 text-gray-700 hover:text-green-600 transition duration-200 {% if current_endpoint == 'renewed_routers' %}bg-green-50 text-green-600 font-semibold{% endif %}">
+            <i class="fas fa-sync-alt w-5"></i>
+            <span>Renewed Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('reversed_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition duration-200 {% if current_endpoint == 'reversed_routers' %}bg-orange-50 text-orange-600 font-semibold{% endif %}">
+            <i class="fas fa-undo w-5"></i>
+            <span>Reversed Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('closed_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition duration-200 {% if current_endpoint == 'closed_routers' %}bg-red-50 text-red-600 font-semibold{% endif %}">
+            <i class="fas fa-times-circle w-5"></i>
+            <span>Closed Accounts</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">Closed Assets</h1>
+                <p class="text-gray-600 mt-2 text-sm sm:text-base">All assets with closed status and their details</p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div class="bg-gradient-to-r from-red-100 to-rose-100 text-red-800 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm sm:text-base text-center sm:text-left border border-red-200 shadow-sm">
+                    <i class="fas fa-boxes mr-2"></i>
+                    Total: {{ closed_assets|length }} Closed Assets
+                </div>
+                <a href="{{ url_for('finance_transactions') }}" 
+                   class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center text-sm sm:text-base shadow-md hover:shadow-lg">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Transactions
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Closed Assets Table -->
+    {% if closed_assets %}
+    <!-- Desktop Table View -->
+    <div class="hidden lg:block bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gradient-to-r from-red-50 to-rose-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-box mr-2 text-red-600"></i>Asset Info
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-user mr-2 text-red-600"></i>Client Info
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-router mr-2 text-red-600"></i>Router Details
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-map-marker-alt mr-2 text-red-600"></i>Location & Assignment
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-money-bill-wave mr-2 text-red-600"></i>Purchase Info
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-calendar-alt mr-2 text-red-600"></i>Dates
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                    {% for asset in closed_assets %}
+                    <tr class="hover:bg-red-50/50 transition-all duration-200 group">
+                        <td class="px-6 py-5">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Name:</span>
+                                    <span class="text-sm font-bold text-gray-900">{{ asset.asset_name or 'N/A' }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Type:</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ asset.asset_type or 'N/A' }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Serial:</span>
+                                    <span class="text-sm text-gray-700 font-mono">{{ asset.serial_number or 'N/A' }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="space-y-1.5">
+                                {% if asset.client_name %}
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Client:</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ asset.client_name }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Account:</span>
+                                    <span class="text-sm text-gray-700">{{ asset.account_number or 'N/A' }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-phone text-gray-400 text-xs"></i>
+                                    <span class="text-sm text-gray-600">{{ asset.phone_number or 'N/A' }}</span>
+                                </div>
+                                {% else %}
+                                <span class="text-sm text-gray-400">No Client Assigned</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="space-y-1.5">
+                                {% if asset.router_name or asset.router_used %}
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Router:</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ asset.router_name or asset.router_used or 'N/A' }}</span>
+                                </div>
+                                {% endif %}
+                                {% if asset.router_password %}
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Password:</span>
+                                    <span class="text-sm text-gray-700 font-mono">{{ asset.router_password }}</span>
+                                </div>
+                                {% endif %}
+                                {% if asset.port_number %}
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Port:</span>
+                                    <span class="text-sm text-gray-700">{{ asset.port_number }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="space-y-1.5">
+                                {% if asset.location %}
+                                <div class="flex items-start space-x-2">
+                                    <i class="fas fa-map-marker-alt text-red-500 text-xs mt-1"></i>
+                                    <span class="text-sm text-gray-700">{{ asset.location }}</span>
+                                </div>
+                                {% endif %}
+                                {% if asset.assigned_employee_name %}
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-user-tie text-gray-400 text-xs"></i>
+                                    <span class="text-sm text-gray-600">{{ asset.assigned_employee_name }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="space-y-1.5">
+                                {% if asset.purchase_price %}
+                                <div class="text-sm font-semibold text-green-700">
+                                    SHS {{ "%.2f"|format(asset.purchase_price) }}
+                                </div>
+                                {% else %}
+                                <span class="text-sm text-gray-400">N/A</span>
+                                {% endif %}
+                                {% if asset.purchase_date %}
+                                <div class="text-xs text-gray-500">
+                                    {{ asset.purchase_date.strftime('%b %d, %Y') }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="space-y-1.5">
+                                {% if asset.created_at %}
+                                <div class="text-xs text-gray-500">
+                                    <span class="font-medium">Created:</span>
+                                    <div>{{ asset.created_at.strftime('%b %d, %Y') }}</div>
+                                </div>
+                                {% endif %}
+                                {% if asset.updated_at %}
+                                <div class="text-xs text-gray-500">
+                                    <span class="font-medium">Closed:</span>
+                                    <div>{{ asset.updated_at.strftime('%b %d, %Y') }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Mobile/Tablet Card View -->
+    <div class="lg:hidden space-y-4">
+        {% for asset in closed_assets %}
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-5 hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-900">{{ asset.asset_name or 'N/A' }}</h3>
+                    <p class="text-sm text-gray-600 mt-1">{{ asset.asset_type or 'N/A' }} - {{ asset.serial_number or 'N/A' }}</p>
+                </div>
+                <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200 whitespace-nowrap">
+                    <i class="fas fa-times-circle mr-1.5"></i>
+                    Closed
+                </span>
+            </div>
+            
+            <div class="space-y-3">
+                {% if asset.client_name %}
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Client Info</p>
+                    <div class="space-y-1.5">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-user text-gray-400 text-xs"></i>
+                            <span class="text-sm font-semibold text-gray-800">{{ asset.client_name }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-hashtag text-gray-400 text-xs"></i>
+                            <span class="text-sm text-gray-700">{{ asset.account_number or 'N/A' }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-phone text-gray-400 text-xs"></i>
+                            <span class="text-sm text-gray-700">{{ asset.phone_number or 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if asset.router_name or asset.router_used or asset.router_password %}
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Router Info</p>
+                    <div class="space-y-1.5">
+                        {% if asset.router_name or asset.router_used %}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Router:</span>
+                            <span class="text-sm font-semibold text-gray-800">{{ asset.router_name or asset.router_used or 'N/A' }}</span>
+                        </div>
+                        {% endif %}
+                        {% if asset.router_password %}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Password:</span>
+                            <span class="text-sm text-gray-700 font-mono">{{ asset.router_password }}</span>
+                        </div>
+                        {% endif %}
+                        {% if asset.port_number %}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Port:</span>
+                            <span class="text-sm text-gray-700">{{ asset.port_number }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {% if asset.location %}
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 mb-1">Location</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
+                            {{ asset.location }}
+                        </p>
+                    </div>
+                    {% endif %}
+                    {% if asset.assigned_employee_name %}
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 mb-1">Assigned To</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            <i class="fas fa-user-tie text-gray-400 mr-1"></i>
+                            {{ asset.assigned_employee_name }}
+                        </p>
+                    </div>
+                    {% endif %}
+                    {% if asset.purchase_price %}
+                    <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+                        <p class="text-xs text-gray-500 mb-1">Purchase Price</p>
+                        <p class="text-sm font-bold text-green-700">
+                            SHS {{ "%.2f"|format(asset.purchase_price) }}
+                        </p>
+                    </div>
+                    {% endif %}
+                    {% if asset.purchase_date %}
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 mb-1">Purchase Date</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            <i class="fas fa-calendar text-gray-400 mr-1"></i>
+                            {{ asset.purchase_date.strftime('%b %d, %Y') }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if asset.created_at or asset.updated_at %}
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Dates</p>
+                    <div class="space-y-1.5">
+                        {% if asset.created_at %}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Created:</span>
+                            <span class="text-sm text-gray-700">{{ asset.created_at.strftime('%b %d, %Y') }}</span>
+                        </div>
+                        {% endif %}
+                        {% if asset.updated_at %}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Closed:</span>
+                            <span class="text-sm text-gray-700">{{ asset.updated_at.strftime('%b %d, %Y') }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 sm:p-12 text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-4">
+            <i class="fas fa-inbox text-gray-400 text-3xl sm:text-4xl"></i>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">No Closed Assets</h3>
+        <p class="text-sm sm:text-base text-gray-600 mb-6">There are currently no closed assets in the system.</p>
+        <a href="{{ url_for('finance_transactions') }}" 
+           class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base shadow-md hover:shadow-lg">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Transactions
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,554 @@
+{% extends "base.html" %}
+
+{% block title %}Relocated Routers - RUSHTACH{% endblock %}
+
+{% block sidebar_content %}
+<!-- Reversed Routers Page Sidebar -->
+<ul class="space-y-2">
+    {% if actual_role == 'Dispatcher' or (actual_role == 'IT Support' and switched_role == 'Dispatcher') %}
+    <li>
+        <a href="{{ url_for('dispatcher_connected_accounts') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'dispatcher_connected_accounts' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-check-circle w-5"></i>
+            <span>Connected Accounts</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('relocated_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'relocated_routers' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-map-marker-alt w-5"></i>
+            <span>Relocated Routers</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('renewed_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'renewed_routers' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-sync-alt w-5"></i>
+            <span>Renewed Routers</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('reversed_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'reversed_routers' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-undo w-5"></i>
+            <span>Reversed Routers</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('closed_routers') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'closed_routers' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-times-circle w-5"></i>
+            <span>Closed Routers</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ url_for('assets') }}" 
+           class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200 {% if current_endpoint == 'assets' %}bg-blue-50 text-blue-600 font-semibold{% endif %}">
+            <i class="fas fa-box w-5"></i>
+            <span>Assets</span>
+        </a>
+    </li>
+    {% endif %}
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">Reversed Routers</h1>
+                <p class="text-gray-600 mt-2 text-sm sm:text-base">All assets with reversed status</p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div class="bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm sm:text-base text-center sm:text-left border border-orange-200 shadow-sm">
+                    <i class="fas fa-undo mr-2"></i>
+                    Total: {{ reversed_assets|length }} Reversed
+                </div>
+                <a href="{{ url_for('dispatcher_connected_accounts') }}" 
+                   class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center text-sm sm:text-base shadow-md hover:shadow-lg">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    <span class="hidden sm:inline">Back to Connected Accounts</span>
+                    <span class="sm:hidden">Back</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reversed Routers Table -->
+    {% if reversed_assets %}
+    <!-- Desktop Table View -->
+    <div class="hidden lg:block bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gradient-to-r from-orange-50 to-amber-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-user-circle mr-2 text-orange-600"></i>Account Info
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-router mr-2 text-orange-600"></i>Router Info
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-map-marker-alt mr-2 text-orange-600"></i>Location & Assigned
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-calendar-alt mr-2 text-orange-600"></i>Created Date
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-tasks mr-2 text-orange-600"></i>Status
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-cog mr-2 text-orange-600"></i>Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                    {% for asset in reversed_assets %}
+                    <tr class="hover:bg-orange-50/50 transition-all duration-200 group">
+                        <td class="px-6 py-5">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Account:</span>
+                                    <span class="text-sm font-bold text-gray-900">{{ asset.account_number or 'N/A' }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-user text-gray-400 text-xs"></i>
+                                    <span class="text-sm font-semibold text-gray-800">{{ asset.client_name or 'N/A' }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-phone text-gray-400 text-xs"></i>
+                                    <span class="text-sm text-gray-600">{{ asset.phone_number or 'N/A' }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Type:</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ asset.asset_type or 'N/A' }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Serial:</span>
+                                    <span class="text-sm text-gray-700 font-mono">{{ asset.serial_number or 'N/A' }}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-medium text-gray-500">Name:</span>
+                                    <span class="text-sm text-gray-700">{{ asset.router_name or asset.router_used or 'N/A' }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="space-y-1.5">
+                                <div class="flex items-start space-x-2">
+                                    <i class="fas fa-map-marker-alt text-orange-500 text-xs mt-1"></i>
+                                    <span class="text-sm text-gray-700 max-w-xs truncate" title="{{ asset.location or 'N/A' }}">
+                                        {{ asset.location or 'N/A' }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-user-tie text-gray-400 text-xs"></i>
+                                    <span class="text-sm text-gray-600">{{ asset.assigned_employee_name or 'N/A' }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="text-sm text-gray-700">
+                                {% if asset.created_at %}
+                                <div class="font-semibold">{{ asset.created_at.strftime('%b %d, %Y') }}</div>
+                                <div class="text-xs text-gray-500 mt-0.5">
+                                    {{ asset.created_at.strftime('%I:%M %p') }}
+                                </div>
+                                {% else %}
+                                <span class="text-gray-400">N/A</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 border border-orange-200">
+                                <i class="fas fa-undo mr-1.5"></i>
+                                {{ asset.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <button type="button" 
+                                    class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-md hover:shadow-lg"
+                                    onclick="openActionModal({{ asset.client_id }})">
+                                <i class="fas fa-cog"></i>
+                                Manage Account
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <!-- Desktop/Tablet Action Modal -->
+                    <div id="action-modal-{{ asset.client_id }}" 
+                         class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                         onclick="closeActionModal({{ asset.client_id }})">
+                        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100"
+                             onclick="event.stopPropagation()">
+                            <!-- Modal Header -->
+                            <div class="px-6 py-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 rounded-t-2xl flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                                        <i class="fas fa-cog text-white"></i>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-gray-900">Account Actions</h3>
+                                </div>
+                                <button type="button" 
+                                        onclick="closeActionModal({{ asset.client_id }})"
+                                        class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all duration-200">
+                                    <i class="fas fa-times text-lg"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Modal Body -->
+                            <div class="p-6 space-y-2" role="menu">
+                                <a href="{{ url_for('relocate_client', client_id=asset.client_id) }}" 
+                                   class="flex items-center gap-4 px-5 py-4 text-base text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 active:scale-95" 
+                                   role="menuitem"
+                                   onclick="closeActionModal({{ asset.client_id }})">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-map-marker-alt text-blue-600 text-lg"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-gray-900">Relocate Client</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">Move client to a new location</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-gray-400"></i>
+                                </a>
+                                <a href="{{ url_for('renew_account', client_id=asset.client_id) }}" 
+                                   class="flex items-center gap-4 px-5 py-4 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-xl transition-all duration-200 border border-transparent hover:border-green-200 active:scale-95" 
+                                   role="menuitem"
+                                   onclick="closeActionModal({{ asset.client_id }})">
+                                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-sync-alt text-green-600 text-lg"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-gray-900">Renew Account</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">Extend account subscription</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-gray-400"></i>
+                                </a>
+                                <a href="{{ url_for('close_account', client_id=asset.client_id) }}" 
+                                   class="flex items-center gap-4 px-5 py-4 text-base text-red-700 hover:bg-red-50 hover:text-red-800 rounded-xl transition-all duration-200 border border-transparent hover:border-red-200 active:scale-95" 
+                                   role="menuitem"
+                                   onclick="closeActionModal({{ asset.client_id }})">
+                                    <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-times-circle text-red-600 text-lg"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-gray-900">Close Account</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">Permanently close this account</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-gray-400"></i>
+                                </a>
+                            </div>
+                            
+                            <!-- Modal Footer -->
+                            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-2xl">
+                                <button type="button" 
+                                        onclick="closeActionModal({{ asset.client_id }})"
+                                        class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Mobile/Tablet Card View -->
+    <div class="lg:hidden space-y-4">
+        {% for asset in reversed_assets %}
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-5 hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-900">{{ asset.client_name or 'N/A' }}</h3>
+                    <p class="text-sm text-gray-600 mt-1">Account: {{ asset.account_number or 'N/A' }}</p>
+                </div>
+                <span class="px-3 py-1.5 inline-flex items-center text-xs font-semibold rounded-full bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 border border-orange-200 whitespace-nowrap">
+                    <i class="fas fa-undo mr-1.5"></i>
+                    {{ asset.status }}
+                </span>
+            </div>
+            
+            <div class="space-y-3">
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Account Info</p>
+                    <div class="space-y-1.5">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-hashtag text-gray-400 text-xs"></i>
+                            <span class="text-sm font-semibold text-gray-800">{{ asset.account_number or 'N/A' }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-user text-gray-400 text-xs"></i>
+                            <span class="text-sm text-gray-700">{{ asset.client_name or 'N/A' }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-phone text-gray-400 text-xs"></i>
+                            <span class="text-sm text-gray-700">{{ asset.phone_number or 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Router Info</p>
+                    <div class="space-y-1.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Type:</span>
+                            <span class="text-sm font-semibold text-gray-800">{{ asset.asset_type or 'N/A' }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Serial:</span>
+                            <span class="text-sm text-gray-700 font-mono">{{ asset.serial_number or 'N/A' }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Name:</span>
+                            <span class="text-sm text-gray-700">{{ asset.router_name or asset.router_used or 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Location</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            <i class="fas fa-map-marker-alt text-orange-500 mr-1"></i>
+                            {{ asset.location or 'N/A' }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Assigned To</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            <i class="fas fa-user-tie text-gray-400 mr-1"></i>
+                            {{ asset.assigned_employee_name or 'N/A' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Actions -->
+            <div class="pt-4 border-t border-gray-200">
+                <button type="button" 
+                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-xl text-sm font-semibold hover:from-gray-800 hover:to-gray-950 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 shadow-lg"
+                        id="mobile-action-menu-{{ asset.client_id }}"
+                        onclick="openActionModal({{ asset.client_id }})">
+                    <i class="fas fa-cog"></i>
+                    Manage Account
+                </button>
+            </div>
+            
+            <!-- Mobile Action Modal (Bottom Sheet) -->
+            <div id="action-modal-mobile-{{ asset.client_id }}" 
+                 class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-end justify-center lg:hidden"
+                 onclick="closeActionModal({{ asset.client_id }})">
+                <div class="bg-white rounded-t-3xl w-full max-w-md shadow-2xl transform translate-y-full transition-transform duration-300 ease-out"
+                     onclick="event.stopPropagation()">
+                    <!-- Modal Header -->
+                    <div class="px-6 py-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 rounded-t-3xl flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-cog text-white"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900">Account Actions</h3>
+                        </div>
+                        <button type="button" 
+                                onclick="closeActionModal({{ asset.client_id }})"
+                                class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all duration-200">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Modal Body -->
+                    <div class="p-6 space-y-3" role="menu">
+                        <a href="{{ url_for('relocate_client', client_id=asset.client_id) }}" 
+                           class="flex items-center gap-4 px-5 py-4 text-base text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 active:scale-95" 
+                           role="menuitem"
+                           onclick="closeActionModal({{ asset.client_id }})">
+                            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-map-marker-alt text-blue-600 text-lg"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-semibold text-gray-900">Relocate Client</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Move client to a new location</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </a>
+                        <a href="{{ url_for('renew_account', client_id=asset.client_id) }}" 
+                           class="flex items-center gap-4 px-5 py-4 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-xl transition-all duration-200 border border-transparent hover:border-green-200 active:scale-95" 
+                           role="menuitem"
+                           onclick="closeActionModal({{ asset.client_id }})">
+                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-sync-alt text-green-600 text-lg"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-semibold text-gray-900">Renew Account</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Extend account subscription</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </a>
+                        <a href="{{ url_for('close_account', client_id=asset.client_id) }}" 
+                           class="flex items-center gap-4 px-5 py-4 text-base text-red-700 hover:bg-red-50 hover:text-red-800 rounded-xl transition-all duration-200 border border-transparent hover:border-red-200 active:scale-95" 
+                           role="menuitem"
+                           onclick="closeActionModal({{ asset.client_id }})">
+                            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-times-circle text-red-600 text-lg"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-semibold text-gray-900">Close Account</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Permanently close this account</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </a>
+                    </div>
+                    
+                    <!-- Modal Footer -->
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <button type="button" 
+                                onclick="closeActionModal({{ asset.client_id }})"
+                                class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 sm:p-12 text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-4">
+            <i class="fas fa-inbox text-gray-400 text-3xl sm:text-4xl"></i>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">No Reversed Routers</h3>
+        <p class="text-sm sm:text-base text-gray-600 mb-6">There are currently no assets with reversed status.</p>
+        <a href="{{ url_for('dispatcher_connected_accounts') }}" 
+           class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base shadow-md hover:shadow-lg">
+            <i class="fas fa-arrow-left mr-2"></i>
+            <span class="hidden sm:inline">Back to Connected Accounts</span>
+            <span class="sm:hidden">Back</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Open modal function (works for both desktop and mobile)
+    function openActionModal(clientId) {
+        // Check if we're on mobile view (viewport width < 1024px)
+        const isMobile = window.innerWidth < 1024;
+        
+        let modal;
+        if (isMobile) {
+            // On mobile, use mobile modal
+            modal = document.getElementById('action-modal-mobile-' + clientId);
+        } else {
+            // On desktop, use desktop modal
+            modal = document.getElementById('action-modal-' + clientId);
+        }
+        
+        // Fallback: if preferred modal not found, try the other one
+        if (!modal) {
+            if (isMobile) {
+                modal = document.getElementById('action-modal-' + clientId);
+            } else {
+                modal = document.getElementById('action-modal-mobile-' + clientId);
+            }
+        }
+        
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            
+            // Add animation class for mobile bottom sheet
+            if (modal.id.includes('mobile')) {
+                // Set initial transform for slide-up animation
+                const modalContent = modal.querySelector('div > div');
+                if (modalContent) {
+                    modalContent.style.transform = 'translateY(100%)';
+                }
+                setTimeout(() => {
+                    if (modalContent) {
+                        modalContent.style.transform = 'translateY(0)';
+                    }
+                }, 10);
+            }
+        }
+    }
+    
+    // Close modal function (works for both desktop and mobile)
+    function closeActionModal(clientId) {
+        // Check if we're on mobile view (viewport width < 1024px)
+        const isMobile = window.innerWidth < 1024;
+        
+        let modal;
+        if (isMobile) {
+            // On mobile, try mobile modal first
+            modal = document.getElementById('action-modal-mobile-' + clientId);
+            if (!modal) {
+                modal = document.getElementById('action-modal-' + clientId);
+            }
+        } else {
+            // On desktop, try desktop modal first
+            modal = document.getElementById('action-modal-' + clientId);
+            if (!modal) {
+                modal = document.getElementById('action-modal-mobile-' + clientId);
+            }
+        }
+        
+        if (modal) {
+            // Add closing animation for mobile
+            if (modal.id.includes('mobile')) {
+                const modalContent = modal.querySelector('div > div');
+                if (modalContent) {
+                    modalContent.style.transform = 'translateY(100%)';
+                }
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                    // Reset transform for next open
+                    if (modalContent) {
+                        modalContent.style.transform = '';
+                    }
+                }, 300);
+            } else {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+    }
+    
+    // Close modals when clicking outside
+    document.addEventListener('click', function(event) {
+        // Check if clicking on backdrop
+        if (event.target.classList.contains('backdrop-blur-sm') || 
+            (event.target.classList.contains('bg-black') && event.target.classList.contains('bg-opacity-50'))) {
+            const modal = event.target.closest('[id*="action-modal-"]');
+            if (modal) {
+                const clientId = modal.id.replace('action-modal-', '').replace('action-modal-mobile-', '');
+                closeActionModal(clientId);
+            }
+        }
+    });
+    
+    // Handle escape key to close modals
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            // Close all modals
+            document.querySelectorAll('[id*="action-modal-"]').forEach(modal => {
+                if (!modal.classList.contains('hidden')) {
+                    const clientId = modal.id.replace('action-modal-', '').replace('action-modal-mobile-', '');
+                    closeActionModal(clientId);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
