@@ -36,12 +36,23 @@ Passenger must use the same Python environment where Flask and pymysql are insta
 
 ### 4. Set environment variables
 
-In your hosting panel, set these environment variables (the app reads only from the environment, not from files):
+Set these so the app can connect to the database and run:
 
 - `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` (MySQL)
 - `SECRET_KEY` (a long random string)
 
-Without these, the app may fail to start or redirect incorrectly.
+**Option A – Hosting panel:** Add them in the “Environment variables” section.  
+**Option B – If you still see “Access denied (using password: NO)”:** Many hosts don’t pass panel env vars to the app. Create a `.env` file in the app directory (e.g. `/home/mmuchafu/rushtech/.env`) with the same names and values:
+
+```
+DB_HOST=localhost
+DB_USER=mmuchafu_rushtech
+DB_PASSWORD=your_actual_password
+DB_NAME=mmuchafu_rushtech
+SECRET_KEY=your_secret_key_here
+```
+
+Do not commit `.env` to git. Then run `touch tmp/restart.txt` to restart the app.
 
 ### 5. Check the error log
 

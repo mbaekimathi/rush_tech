@@ -10,9 +10,8 @@ echo "=========================================="
 # Check if .env exists
 if [ ! -f .env ]; then
     echo "⚠️  .env file not found!"
-    echo "📝 Creating .env from .env.example..."
-    cp .env.example .env
-    echo "✅ Please edit .env with your production settings before continuing!"
+    echo "📝 Create a .env file in this directory with: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, SECRET_KEY"
+    echo "   Then run this script again."
     exit 1
 fi
 

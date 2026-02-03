@@ -53,7 +53,7 @@ A modern, responsive assets management system built with Flask, PyMySQL, and Tai
    export DB_NAME=assets_management
    export ADMIN_PASSWORD=admin123
    ```
-   See `env.example` for the full list of variable names.
+   Or create a `.env` file in the project root with the same variable names and values (the app loads it automatically).
 
 6. **Run the application:**
    ```bash
@@ -71,7 +71,7 @@ A modern, responsive assets management system built with Flask, PyMySQL, and Tai
 To deploy on your hosting using the GitHub repo:
 
 1. **Clone on the server** (or use your host’s “Clone Repository” with `https://github.com/mbaekimathi/rush_tech.git`).
-2. **Set environment variables** in your hosting panel (see `env.example` for names):
+2. **Set environment variables** in your hosting panel or create a `.env` file in the app directory:
    - `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` — your MySQL credentials
    - `SECRET_KEY` — a long random string for sessions
 3. **Install and run:**
@@ -186,8 +186,8 @@ RUSH TECH/
 ├── wsgi.py               # WSGI entry point for production
 ├── gunicorn_config.py    # Gunicorn configuration
 ├── requirements.txt      # Python dependencies
-├── env.example           # Environment variable names (set in panel/shell)
-├── .gitignore           # Git ignore file
+├── .env                  # Your credentials (create this; do not commit)
+├── .gitignore            # Git ignore file
 ├── README.md            # This file
 └── templates/           # HTML templates
     ├── base.html        # Base layout template
