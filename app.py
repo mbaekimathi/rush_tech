@@ -13,6 +13,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import secure_filename
 import re
+from dotenv import load_dotenv
+
+# Load .env before any config so DB_* and other env vars are available (e.g. under Passenger)
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -4320,10 +4324,6 @@ def internal_error(error):
     return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
-    # Development mode only
-    from dotenv import load_dotenv
-    load_dotenv()
-    
     logger.info("Starting RUSHTACH Assets Management System...")
 
     parser = argparse.ArgumentParser(add_help=False)
