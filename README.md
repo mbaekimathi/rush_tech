@@ -44,21 +44,16 @@ A modern, responsive assets management system built with Flask, PyMySQL, and Tai
    pip install -r requirements.txt
    ```
 
-4. **Configure environment variables:**
+4. **Set environment variables** (export in your shell or set in your IDE/run config):
    ```bash
-   cp .env.example .env
-   # Edit .env with your database credentials
+   export SECRET_KEY=your-secret-key-here
+   export DB_HOST=localhost
+   export DB_USER=root
+   export DB_PASSWORD=your_mysql_password
+   export DB_NAME=assets_management
+   export ADMIN_PASSWORD=admin123
    ```
-
-5. **Update `.env` file:**
-   ```env
-   SECRET_KEY=your-secret-key-here
-   DB_HOST=localhost
-   DB_USER=root
-   DB_PASSWORD=your_mysql_password
-   DB_NAME=assets_management
-   ADMIN_PASSWORD=admin123
-   ```
+   See `env.example` for the full list of variable names.
 
 6. **Run the application:**
    ```bash
@@ -76,7 +71,7 @@ A modern, responsive assets management system built with Flask, PyMySQL, and Tai
 To deploy on your hosting using the GitHub repo:
 
 1. **Clone on the server** (or use your host’s “Clone Repository” with `https://github.com/mbaekimathi/rush_tech.git`).
-2. **Set environment variables** in your hosting panel (or create `.env` from `env.example`):
+2. **Set environment variables** in your hosting panel (see `env.example` for names):
    - `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` — your MySQL credentials
    - `SECRET_KEY` — a long random string for sessions
 3. **Install and run:**
@@ -86,7 +81,7 @@ To deploy on your hosting using the GitHub repo:
    ```
 4. **Updates:** `git pull` then restart the app.
 
-**Important:** Do not commit `.env` or real passwords. The app reads credentials only from the environment on the server.
+**Important:** The app reads credentials only from environment variables (set in your hosting panel or shell). Do not commit real passwords.
 
 ## Production Deployment
 
@@ -191,7 +186,7 @@ RUSH TECH/
 ├── wsgi.py               # WSGI entry point for production
 ├── gunicorn_config.py    # Gunicorn configuration
 ├── requirements.txt      # Python dependencies
-├── .env.example          # Environment variables template
+├── env.example           # Environment variable names (set in panel/shell)
 ├── .gitignore           # Git ignore file
 ├── README.md            # This file
 └── templates/           # HTML templates
@@ -212,7 +207,7 @@ The application automatically creates the database and tables on first run:
 
 ## Production Checklist
 
-- [ ] Set strong `SECRET_KEY` in `.env`
+- [ ] Set strong `SECRET_KEY` as an environment variable
 - [ ] Set `FLASK_DEBUG=False` in production
 - [ ] Use strong database passwords
 - [ ] Configure firewall rules
@@ -227,7 +222,7 @@ The application automatically creates the database and tables on first run:
 
 ### Database Connection Issues
 - Verify MySQL is running: `sudo systemctl status mysql`
-- Check database credentials in `.env`
+- Check database credentials in your environment variables
 - Ensure database user has proper permissions
 
 ### Port Already in Use
@@ -236,7 +231,7 @@ The application automatically creates the database and tables on first run:
 netstat -ano | findstr :5000  # Windows
 lsof -i :5000                  # Linux/Mac
 
-# Kill the process or change PORT in .env
+# Kill the process or set a different PORT environment variable
 ```
 
 ### Permission Errors

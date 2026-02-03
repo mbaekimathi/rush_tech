@@ -36,7 +36,7 @@ Passenger must use the same Python environment where Flask and pymysql are insta
 
 ### 4. Set environment variables
 
-In your hosting panel (or in a `.env` file that your app loads), set at least:
+In your hosting panel, set these environment variables (the app reads only from the environment, not from files):
 
 - `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` (MySQL)
 - `SECRET_KEY` (a long random string)

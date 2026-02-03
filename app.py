@@ -13,10 +13,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import secure_filename
 import re
-from dotenv import load_dotenv
-
-# Load .env before any config so DB_* and other env vars are available (e.g. under Passenger)
-load_dotenv()
 
 # Configure logging
 logging.basicConfig(
